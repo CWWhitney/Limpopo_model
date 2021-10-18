@@ -67,6 +67,8 @@ For a full list of possible distributions, type `?random.estimate1d ` in your R 
 
 ### The `model_function`
 
+![Model of the social effects of altered river flows on the sustainability of livelihoods in the Limpopo Basin ](figures/Collective_Model.png)
+
 The decision model is coded as an R function which takes in the variables provided in the data table and generates a model output, such as the Net Present Value. 
 
 In the following we use of various decisionSupport functions, which use the `tidyverse` libraries [@tidyverse2019] including `ggplot2` [@R-ggplot2], `plyr` [@R-plyr] and `dplyr` [@R-dplyr] among others in the [R programming language](https://www.r-project.org/) [@R-base]. 
