@@ -1,0 +1,21 @@
+,Description,label,variable,distribution,lower,median,upper
+# General model inputs,,,,,,,
+,"Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).",coeff. Variation,var_CV,posnorm,5,,20
+,Discount rate (%),Discount rate (%),discount_rate,posnorm,1,,5
+,Years from the start o the implementation of the intervention to the end.,Project time horizon (years),n_years,const,5,,5
+,"Initial investment required (one time cost, USD)",Inv. Cost USD,intervention_investment_cost,posnorm,1000,,3000
+,Running costs of intervention (USD/yr),Inv running cost USD,intervention_running_cost,posnorm,100,,200
+,Baseline running cosys(USD/yr),Base cost USD,baseline_running_cost,posnorm,150,,300
+,,,,,,,
+# Crops,,,,,,,
+,Baseline crop yield (ton/ha/yr),Crop yield (ton/ha/yr),crop_yield_baseline,posnorm,20,,80
+,Farmer's crop profits (USD per ton),Profit from crop yield (USD/ton),crop_profit,posnorm,40,,120
+,,,,,,,
+,Chance that crop yields will increase with the intervention (%),Chance crops increase (%),chance_that_crop_yields_increase,tnorm_0_1,0.04,,0.1
+,Amount that crop yields will increase with the intervention (%),Amount crops increase (%),amount_that_crop_yields_increase,tnorm_0_1,0.05,,0.15
+#Livestock,,,,,,,
+,Baseline livestock yield (ton/ha/yr),Livestock yield (ton/ha/yr),livestock_yield_baseline,posnorm,1000,,8000
+,Livestock keepers profit (USD per ton),Profit from livestock yield (USD/ton),livestock_profit,posnorm,40,,120
+,,,,,,,
+,Chance that livestock yields will increase with the intervention (%),Chance livestock increase (%),chance_that_livestock_yields_increase,tnorm_0_1,0.04,,0.1
+,Amount that livestock yields will increase with the intervention (%),Amount livestock increase (%),amount_that_livestock_yields_increase,tnorm_0_1,0.05,,0.15
