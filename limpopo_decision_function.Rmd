@@ -247,7 +247,7 @@ We can use the same function for the value of the decision (difference in NPV be
 
 #### Cashflow analysis
 
-Here we plot the distribution of annual cashflow over the entire simulated period for the intervention. For this we use the `plot_cashflow()` function which uses the specified cashflow outputs from the `mcSimulation()` function (in our case `Cashflow_decision_do`) to show cashflow over time.
+Here we plot the distribution of annual crop water gap difference over the entire simulated period for the intervention. For this we use the `plot_cashflow()` function, which uses the specified outputs from the `mcSimulation()` function (in our case `Downstream_difference`) to show the crop water gap over time.
 
 ```{r plot_cashflow}
 plot_cashflow(mcSimulation_object = mcSimulation_results, cashflow_var_name = "Downstream_difference",y_axis_name = "Downstream difference (m3)",x_axis_name = "Month")
