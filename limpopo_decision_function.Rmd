@@ -78,7 +78,7 @@ Here we generate a model as a function using `decisionSupport` library we use th
 
 
 ```{r make_variables, include=FALSE}
-input_table<-"limpopo_input_table.csv"
+input_table<-"data/limpopo_input_table.csv"
 
 make_variables <- function(est,n=1){ x <- random(rho=est, n=n)
 for(i in colnames(x)) assign(i, as.numeric(x[1,i]),envir=.GlobalEnv)}
@@ -199,14 +199,14 @@ The `numberOfModelRuns` argument is an integer indicating the number of model ru
 
 ```{r mcSimulation}
 mcSimulation_results <- decisionSupport::mcSimulation(
-  estimate = decisionSupport::estimate_read_csv("limpopo_input_table.csv"),
+  estimate = decisionSupport::estimate_read_csv("data/limpopo_input_table.csv"),
   model_function = limpopo_decision_function,
   numberOfModelRuns = 1e3, #run 1,000 times
   functionSyntax = "plainNames"
 )
 
-mcSimulation_results <- scenario_mc(base_estimate=decisionSupport::estimate_read_csv("limpopo_input_table.csv"),
-                                    scenarios=read.csv("Scenarios.csv",fileEncoding="UTF-8-BOM"),
+mcSimulation_results <- scenario_mc(base_estimate=decisionSupport::estimate_read_csv("data/limpopo_input_table.csv"),
+                                    scenarios=read.csv("data/Scenarios.csv",fileEncoding="UTF-8-BOM"),
                                     model_function = limpopo_decision_function,
                                     numberOfModelRuns = 2e2, #run 1,000 times
                                     functionSyntax = "plainNames"
@@ -280,7 +280,7 @@ We run the `plot_pls()` on the results from `plsr.mcSimulation()` with a number 
 Here we import the input table again to replace the labels for the variables on the y-axis. The input table can include a `label` and `variable` column. The standard labels (from the `variable` column) are usually computer readable and not very nice for a plot. The `plot_pls()` function uses the text in the `label` column as replacement for the default text in the `variable` column.  
 
 ```{r}
-input_table <- read.csv("limpopo_input_table.csv")
+input_table <- read.csv("data/limpopo_input_table.csv")
 
 plot_pls(pls_result, input_table = input_table, threshold = 0.5)
 
