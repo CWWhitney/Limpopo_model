@@ -1,6 +1,6 @@
 ---
 title: "Generating and calculating causal models for Limpopo"
-author: "Cory Whitney, Eike Ludeling"
+author: "Cory Whitney, Eike Luedeling"
 output: 
  html_document:
       toc: true 
@@ -38,7 +38,9 @@ knitr::write_bib(c(.packages(),
                    'plyr',
                    'tidyverse',
                    'ggplot2', 
-                   'decisionSupport'), 'packages.bib')
+                   'decisionSupport',
+                   'nasapower',
+                   'Evapotranspiration'), 'packages.bib')
 
 ```
 
@@ -105,10 +107,20 @@ effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
 effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 
 
-# we'll probably compute the crop water needs externally, based on realistic scenarios
-# to be entered via the scenario_mc function
+# we'll compute crop water needs based on ET0 (computed based on the Hargreaves
+# Samani equation, as implemented in the Evapotranspiration package). Input
+# temperature data comes from the NASAPOWER dataset (accessed through the 
+# nasapower package)
+# The data will be based on scenarios that represent conditions during real
+# years in the past
+# To get from ET0 to crop water use, we need to multiply ET0 with a crop
+# coefficient (kc), which is estimated for each month
 
-cropwat_need<-sapply(1:12,function(x) eval(parse(text=paste0("cropwat_",x)))) # in mm
+ET0<-sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
+
+kc<-sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
+
+cropwat_need<-ET0*kc # in mm
 
 irrigation_need<-cropwat_need-effective_rainfall # in mm
 
@@ -197,9 +209,82 @@ Using the model function above, we can perform a Monte Carlo simulation with the
 
 The `numberOfModelRuns` argument is an integer indicating the number of model runs for the Monte Carlo simulation. Unless the model function is very complex, 10,000 runs is a reasonable choice (for complex models, 10,000 model runs can take a while, so especially when the model is still under development, it often makes sense to use a lower number).
 
+We'll first have to make a scenario file, for which we can use data for 1980 to 2020
+
+```{r}
+library(Evapotranspiration)
+data("constants")
+
+library(nasapower)
+ag_d <- get_power(
+  community = "ag",
+  lonlat = c(31.08,-23.7),
+  pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
+  dates = c("1981-01-01", "2020-12-31"),
+  temporal_api = "daily"
+)
+
+colnames(ag_d)[c(3:5, 8, 9, 10)] <-
+  c("Year", "Month", "Day", "Tmax", "Tmin", "Precipitation")
+
+Inputs <- ReadInputs(c("Tmin", "Tmax"), ag_d, stopmissing = c(50, 50, 50))
+
+ET <-
+  ET.HargreavesSamani(
+    Inputs,
+    constants,
+    ts = "daily",
+    message = "yes",
+    AdditionalStats = "yes",
+    save.csv = "no"
+  )
+
+ETdata <- data.frame(year = 1981:2021)
+ETdata[, month.abb[1:12]] <- NA
+for (yyyy in 1981:2020)
+  ETdata[which(ETdata$year == yyyy), 2:13] <-
+  ET$ET.Monthly[as.character(yyyy + 0:11 / 12)]
+
+rain <-
+  aggregate(ag_d$Precipitation,
+            by = list(ag_d$Year, ag_d$Month),
+            FUN = sum)
+raindata <- data.frame(year = 1981:2021)
+raindata[, month.abb[1:12]] <- NA
+for (yyyy in 1981:2020)
+  raindata[which(raindata[, 1] == yyyy), 2:13] <-
+  rain[which(rain[, 1] == yyyy), 3]
+
+
+scenario_variables <-
+  c(paste0("river_flow_", 1:12),
+    paste0("ET0_", 1:12),
+    paste0("prec_", 1:12))
+
+Scenarios <- data.frame(Variable = scenario_variables, param = "both")
+
+for (yyyy in 1981:2020)
+{
+  Scenarios[, paste0("y_", yyyy)] <- NA
+  for (mm in 1:12)
+  {
+    Scenarios[which(Scenarios$Variable == paste0("ET0_", mm)), paste0("y_", yyyy)] <-
+      ETdata[which(ETdata$year == yyyy), 1 + mm]
+    Scenarios[which(Scenarios$Variable == paste0("prec_", mm)), paste0("y_", yyyy)] <-
+      raindata[which(ETdata$year == yyyy), 1 + mm]
+  }
+}
+
+write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
+
+
+
+```
+
+
 ```{r mcSimulation_scenarios}
 mcSimulation_results <- scenario_mc(base_estimate=decisionSupport::estimate_read_csv("data/limpopo_input_table.csv"),
-                                    scenarios=read.csv("data/Scenarios.csv",fileEncoding="UTF-8-BOM"),
+                                    scenarios=read.csv("data/scenarios_1980_2020.csv",fileEncoding="UTF-8-BOM"),
                                     model_function = limpopo_decision_function,
                                     numberOfModelRuns = 2e2, #run 1,000 times
                                     functionSyntax = "plainNames"

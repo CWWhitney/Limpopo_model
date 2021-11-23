@@ -1,7 +1,6 @@
 # Evapotranspiration package Hargreaves Samani
 library(Evapotranspiration)
 data("constants")
-data("processeddata")
 
 library(nasapower)
 ag_d <- get_power(
@@ -30,5 +29,21 @@ raindata<-data.frame(year=1981:2021)
 raindata[,month.abb[1:12]]<-NA
 for(yyyy in 1981:2020)
   raindata[which(raindata[,1]==yyyy),2:13]<-rain[which(rain[,1]==yyyy),3]
+
+
+scenario_variables<-c(paste0("river_flow_",1:12),paste0("ET0_",1:12),paste0("prec_",1:12))
+
+Scenarios<-data.frame(Variable=scenario_variables,param="both")
+
+for(yyyy in 1981:2020)
+  {Scenarios[,paste0("y_",yyyy)]<-NA
+  for(mm in 1:12)
+    {Scenarios[which(Scenarios$Variable==paste0("ET0_",mm)),paste0("y_",yyyy)]<-ETdata[which(ETdata$year==yyyy),1+mm]   
+     Scenarios[which(Scenarios$Variable==paste0("prec_",mm)),paste0("y_",yyyy)]<-raindata[which(ETdata$year==yyyy),1+mm]   
+  }
+}
+    
+write.csv(Scenarios,"data/scenarios_1980_20120.csv")
+
 
 
