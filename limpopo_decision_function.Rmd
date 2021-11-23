@@ -1,9 +1,9 @@
 ---
 title: "Generating and calculating causal models for Limpopo"
-author: "Cory Whitney"
+author: "Cory Whitney, Eike Ludeling"
 output: 
  html_document:
-      toc: true
+      toc: true 
       toc_float: true
       toc_collapsed: false
 bibliography:
@@ -21,6 +21,7 @@ knitr::opts_chunk$set(
   fig.height=3.5
 )
 
+# devtools::install_github("eikeluedeling/decisionSupport")
 library(decisionSupport)
 library(dplyr)
 library(patchwork)
