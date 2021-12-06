@@ -1,6 +1,6 @@
 ---
 title: "Generating and calculating causal models for Limpopo"
-author: "Cory Whitney, Eike Luedeling"
+author: "Eike Luedeling, Cory Whitney"
 output: 
  html_document:
       toc: true 
@@ -21,6 +21,7 @@ knitr::opts_chunk$set(
   fig.height=3.5
 )
 
+# Load hte necessary libraries 
 # devtools::install_github("eikeluedeling/decisionSupport")
 library(decisionSupport)
 library(dplyr)
@@ -32,7 +33,7 @@ library(Evapotranspiration)
 
 ```{r, warning = F, include = F}
 
-#Automatically write R package citation entries to a .bib file
+# Automatically write R package citation entries to a .bib file
 knitr::write_bib(c(.packages(),
                    'dplyr',
                    'patchwork',
@@ -47,7 +48,7 @@ knitr::write_bib(c(.packages(),
 
 ## The model
 
-Decision-makers often wish to have a quantitative basis for their decisions. However,‘hard data’ is often missing or unattainable for many important variables, which can paralyze the decision-making processes or lead decision-makers to conclude that large research efforts are needed before a decision can be made. That is, many variables decision makers must consider cannot be precisely quantified, at least not without unreasonable effort. The major objective of (prescriptive) decision analysis is to support decision-making processes faced with this problem. Following the principles of Decision Analysis can allow us to make forecasts of decision outcomes without precise numbers, as long as probability distributions describing the possible values for all variables can be estimated. 
+Decision-makers often wish to have a quantitative basis for their decisions. However,‘hard data’ is often missing or unattainable for many important variables, which can paralyze the decision-making processes or lead decision-makers to conclude that large research efforts are needed before a decision can be made. That is, many variables decision makers must consider cannot be precisely quantified, at least not without unreasonable effort. The major objective of (prescriptive) decision analysis is to support decision-making processes where decision makers are faced with this problem. Following the principles of Decision Analysis can allow us to make forecasts of decision outcomes without precise numbers, as long as probability distributions describing the possible values for all variables can be estimated. 
 
 The `decisionSupport` package implements this as a Monte Carlo simulation, which generates a large number of plausible system outcomes, based on random numbers for each input variable that are drawn from user-specified probability distributions. This approach is useful for determining whether a clearly preferable course of action can be delineated based on the present state of knowledge without the need for further information. If the distribution of predicted system outcomes does not imply a clearly preferable decision option, variables identified as carrying decision-relevant uncertainty can then be targeted by decision-supporting research.
 
@@ -116,7 +117,7 @@ effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
 effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 
 
-# we'll compute crop water needs based on ET0 (computed based on the Hargreaves
+# We compute crop water needs based on ET0 (computed based on the Hargreaves
 # Samani equation, as implemented in the Evapotranspiration package). Input
 # temperature data comes from the NASAPOWER dataset (accessed through the 
 # nasapower package)
@@ -152,7 +153,6 @@ river_flow<-pre_livestock_river_flow-livestock_water_needs
 demand_for_farm_area<-n_subsistence_farmers*necessary_farm_size_per_household
 
 farmed_area<-min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
-
 
 total_cropwater_need<-cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
 total_effective_rainfall<-effective_rainfall*farmed_area*10 # total effective rainfall
@@ -239,7 +239,6 @@ scen3_river_flow_downstream<-adj_river_flow-scen3_extracted_river_water
 
 
 ## what happens if we can't meet the water needs?
-
 
 return(list(scen1_downstream_river_flow=scen1_river_flow_downstream,
             scen2_downstream_river_flow=scen2_river_flow_downstream,
