@@ -1,30 +1,29 @@
 ---
 title: "Generating and calculating causal models for Limpopo"
 author: "Eike Luedeling, Cory Whitney"
-output: 
- html_document:
-      toc: true 
-      toc_float: true
-      toc_collapsed: false
+output: word_document
 bibliography:
  - packages.bib
  - references.bib 
 ---
 
+Here we generate a holistic model to simulate the contribution of water flows to sustainable agriculture, food security and livelihoods. The objective is to make the linkage between sustainable eflows in the rivers, and the water-requirements of sustainable agriculture. The simulation offers insights into the role that river flows play in the ability of agriculture to be sustainable, and the consequent risks to agriculture when river flows are either optimal or when they become marginal. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given eflow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
 
 ```{r, include = F}
 #set global options for knitr chunks 
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>", 
+  dpi=300,
   fig.width=5, 
   fig.height=3.5
 )
 
-# Load hte necessary libraries 
+# Load the necessary libraries 
 # devtools::install_github("eikeluedeling/decisionSupport")
 library(decisionSupport)
 library(dplyr)
+library(nasapower)
 library(patchwork)
 library(tidyverse)
 library(Evapotranspiration)
@@ -89,7 +88,6 @@ The following function defines 3 scenarios:
 * Scenario 2 - restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events.
 * Scenario 3 - dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
 
-
 ```{r make_variables, include=FALSE}
 input_table<-"data/limpopo_input_table.csv"
 
@@ -99,8 +97,6 @@ for(i in colnames(x)) assign(i, as.numeric(x[1,i]),envir=.GlobalEnv)}
 # run the function on the input_table
 make_variables(estimate_read_csv(input_table))
 ```
-
-
 
 
 ```{r model}
@@ -200,7 +196,7 @@ scen3_usable_river_flow <-
   sapply(1:12, function(x)
     max(0, adj_river_flow[x] - minimum_flow_to_operate_pumps))
 
-# how much water gets extracted from the river
+# calculate how much water gets extracted from the river
 
 scen1_extracted_river_water <-
   sapply(1:12, function(x)
@@ -231,14 +227,12 @@ scen1_crop_water_gap<-scen1_irrigation_shortfall/(cropwat_need*farmed_area*10)
 scen2_crop_water_gap<-scen2_irrigation_shortfall/(cropwat_need*farmed_area*10)
 scen3_crop_water_gap<-scen3_irrigation_shortfall/(cropwat_need*farmed_area*10)
 
-
 # calculate how much water is left after farmers extracted water
 scen1_river_flow_downstream<-river_flow-scen1_extracted_river_water
 scen2_river_flow_downstream<-river_flow-scen2_extracted_river_water
 scen3_river_flow_downstream<-adj_river_flow-scen3_extracted_river_water
 
-
-## what happens if we can't meet the water needs?
+# calculate outputs and differences 
 
 return(list(scen1_downstream_river_flow=scen1_river_flow_downstream,
             scen2_downstream_river_flow=scen2_river_flow_downstream,
@@ -260,18 +254,17 @@ return(list(scen1_downstream_river_flow=scen1_river_flow_downstream,
 
 #### Perform a Monte Carlo simulation with scenarios 
 
-Using the model function above, we can perform a Monte Carlo simulation with the `mcSimulation()` function from `decisionSupport`. This function generates distributions of all variables in the input table as well as the specified model outputs (see `return()` function above) by calculating random draws in our defined `limpopo_decision_function()`. Make sure that all the variables in the input table are included in the model (erroneous variables listed there can cause issues with some of the post-hoc analyses). 
+Using the model function above, we can perform a Monte Carlo simulation with the `mcSimulation()` function from `decisionSupport`. This function generates distributions of all variables in the input table as well as the specified model outputs (see `return()` function above) by calculating random draws in our defined `limpopo_decision_function()`. We runa  visual assessment to ensure that all the variables in the input table are included in the model (erroneous variables listed there can cause issues with some of the post-hoc analyses). 
 
 The `numberOfModelRuns` argument is an integer indicating the number of model runs for the Monte Carlo simulation. Unless the model function is very complex, 10,000 runs is a reasonable choice (for complex models, 10,000 model runs can take a while, so especially when the model is still under development, it often makes sense to use a lower number).
 
-We'll first have to make a scenario file, for which we can use data for 1980 to 2020
+We first make a scenario file, for which we can use data for 1980 to 2020.
 
 ```{r}
-library(Evapotranspiration)
+# load data from Evapotranspiration
 data("constants")
 
-library(nasapower)
-
+# use nasapower for evapotranspiration data
 ag_d <- get_power(
   community = "ag",
   lonlat = c(31.08,-23.7),
@@ -280,13 +273,16 @@ ag_d <- get_power(
   temporal_api = "daily"
 )
 
+# choose years of assessment
 years<-1981:2009
 
+# name variables
 colnames(ag_d)[c(3:5, 8, 9, 10)] <-
   c("Year", "Month", "Day", "Tmax", "Tmin", "Precipitation")
 
 Inputs <- ReadInputs(c("Tmin", "Tmax"), ag_d, stopmissing = c(50, 50, 50))
 
+# apply ET.HargreavesSamani from the Evapotranspiration library
 ET <-
   ET.HargreavesSamani(
     Inputs,
@@ -329,7 +325,7 @@ eflowsort <-
 eflow_exceedance<-eflowsort[which(eflowsort$Exceedence == 80),]
 eflow_per_month<-eflow_exceedance[2:13]*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24
 
-
+# read data of present data 
 present_flows<-read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
 presentflowsort <-
   present_flows[, c(1, order(unlist(sapply(colnames(present_flows)[2:13], function(x)
@@ -360,33 +356,25 @@ for (yyyy in years)
   }
 }
 
-#natural flows not used so far
+# natural flows (this is for information and not used in the model)
 natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
 
-
-
-
-
+# write the scenarios file
 write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
-
-
-
 ```
 
 
 ```{r mcSimulation_scenarios}
+# run the model with the scenario_mc function (a monte carlo with data from the scenarios for some inputs)
 mcSimulation_results <-
   scenario_mc(
     base_estimate = decisionSupport::estimate_read_csv("data/limpopo_input_table.csv"),
     scenarios = read.csv("data/scenarios_1980_2020.csv", fileEncoding =
                            "UTF-8-BOM"),
     model_function = limpopo_decision_function,
-    numberOfModelRuns = 2e2,
-    #run 1,000 times
+    numberOfModelRuns = 2e2, #run 1,000 times
     functionSyntax = "plainNames"
   )
-
-
 ```
 
 #### Plot Net Present Value (NPV) distributions 
@@ -400,7 +388,6 @@ decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
                                     vars = c("Mean_Crop_water_gap_difference_2_vs_1"),
                                     method = 'smooth_simple_overlay',
                                     base_size = 7)
-
 ```
 
 In short, an eflow scenario that simply curtails extraction but doesn't alleviate sub-eflow flows, is likely to cause considerable irrigation water shortages.
@@ -448,8 +435,6 @@ plot_cashflow(mcSimulation_object = mcSimulation_results,
               x_axis_name = "Month")
 ```
 
-
-
 Here a similar plot of `Crop_water_gap_difference` to show the crop water gap over time.
 
 ```{r plot_cashflow_downstream_cropwater_gap}
@@ -465,8 +450,6 @@ plot_cashflow(mcSimulation_object = mcSimulation_results,
               y_axis_name = "Crop water gap difference (share crop need)",
               x_axis_name = "Month")
 ```
-
-
 
 #### Projection to Latent Structures (PLS) analysis
 
@@ -513,7 +496,6 @@ pls_result <- plsr.mcSimulation(object = mcSimulation_pls,
 plot_pls(pls_result, input_table = input_table, threshold = 0.5)
 
 ```
-
 
 ### Addendum
 

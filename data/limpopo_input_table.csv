@@ -12,7 +12,7 @@ Precipitation in month 10,,prec_10,posnorm,12.5,,37.5,
 Precipitation in month 11,,prec_11,posnorm,35,,105,
 Precipitation in month 12,,prec_12,posnorm,45,,135,
 ,,,,,,,
-Reference evapotranspiration (ET0) mm/per ha month 1,,ET0_1,posnorm,144,,240,"placeholder, data from the Evapotranspiration package"
+Reference evapotranspiration (ET0) mm/per ha month 1,,ET0_1,posnorm,144,,240,Hargreaves Samani equation with nasapower package
 Reference evapotranspiration (ET0) mm/per ha month 2,,ET0_2,posnorm,114.75,,191.25,
 Reference evapotranspiration (ET0) mm/per ha month 3,,ET0_3,posnorm,96,,160,
 Reference evapotranspiration (ET0) mm/per ha month 4,,ET0_4,posnorm,67.5,,112.5,
