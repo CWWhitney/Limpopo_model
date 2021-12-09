@@ -236,21 +236,27 @@ scen3_river_flow_downstream<-adj_river_flow-scen3_extracted_river_water
 
 # calculate outputs and differences 
 
-return(list(scen1_downstream_river_flow=scen1_river_flow_downstream,
-            scen2_downstream_river_flow=scen2_river_flow_downstream,
-            scen3_downstream_river_flow=scen3_river_flow_downstream,
-            scen3_dam_release=required_dam_release,
-            Downstream_difference_2_vs_1=scen2_river_flow_downstream-scen1_river_flow_downstream,
-            Downstream_difference_3_vs_1=scen3_river_flow_downstream-scen1_river_flow_downstream,
-            scen1_crop_water_gap=scen1_crop_water_gap,
-            scen2_crop_water_gap=scen2_crop_water_gap,
-            scen3_crop_water_gap=scen3_crop_water_gap,
-            Crop_water_gap_difference_2_vs_1=scen2_crop_water_gap-scen1_crop_water_gap,
-            Crop_water_gap_difference_3_vs_1=scen3_crop_water_gap-scen1_crop_water_gap,
+return(list(scen1_downstream_river_flow=mean(scen1_river_flow_downstream),
+            scen2_downstream_river_flow=mean(scen2_river_flow_downstream),
+            scen3_downstream_river_flow=mean(scen3_river_flow_downstream),
+            scen3_dam_release=mean(required_dam_release),
+            Downstream_difference_2_vs_1=mean(scen2_river_flow_downstream-scen1_river_flow_downstream),
+            Downstream_difference_3_vs_1=mean(scen3_river_flow_downstream-scen1_river_flow_downstream),
+            scen1_crop_water_gap=mean(scen1_crop_water_gap),
+            scen2_crop_water_gap=mean(scen2_crop_water_gap),
+            scen3_crop_water_gap=mean(scen3_crop_water_gap),
+            Crop_water_gap_difference_2_vs_1=mean(scen2_crop_water_gap-scen1_crop_water_gap),
+            Crop_water_gap_difference_3_vs_1=mean(scen3_crop_water_gap-scen1_crop_water_gap),
             Mean_Crop_water_gap_difference_2_vs_1=mean(scen2_crop_water_gap-scen1_crop_water_gap),
             Mean_Crop_water_gap_difference_3_vs_1=mean(scen3_crop_water_gap-scen1_crop_water_gap)))
   
 }
+
+gap_2_n_1_plot <- decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
+                                    vars = c("scen1_downstream_river_flow1", "Mean_Crop_water_gap_difference_2_vs_1"),
+                                    method = 'smooth_simple_overlay',
+                                    base_size = 7)
+
 
 ```
 
@@ -391,13 +397,30 @@ The results will refer to the scenarios we formulated in the model:
 
 We can use the `plot_distributions()` function to produce one of the several plotting options for distribution outputs. This shows us an overlay of the full results of the Monte Carlo model of the decision options, i.e. the expected NPV if we choose to do the intervention `Interv_NPV` or not do the intervention `NO_Interv_NPV`.
 
-Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between the baseline Scenario 1, no eflows and eflow Scenario 2, restricted extraction. In this eflow scenario eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events.
+Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between the baseline Scenario 1, no eflows and eflow Scenario 2, restricted extraction. In this scenario whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events.
 
 ```{r}
-decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
+gap_2_n_1_plot <- decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
+                                    vars = c("Downstream_difference_2_vs_1", "Mean_Crop_water_gap_difference_2_vs_1"),
+                                    method = 'smooth_simple_overlay',
+                                    base_size = 7)
+
+gap_2_vs_1_plot <- decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
                                     vars = c("Mean_Crop_water_gap_difference_2_vs_1"),
                                     method = 'smooth_simple_overlay',
                                     base_size = 7)
+
+library(patchwork)
+
+# plot with patchwork
+layout <- "
+           AAABBB
+           AAABBB
+          "
+
+gap_2_n_1_plot + gap_2_vs_1_plot + 
+plot_layout(guides = "collect", design = layout) 
+
 ```
 
 In short, an eflow scenario that simply curtails extraction but doesn't alleviate sub-eflow flows, is likely to cause considerable irrigation water shortages.
