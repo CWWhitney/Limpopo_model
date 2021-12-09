@@ -7,7 +7,9 @@ bibliography:
  - references.bib 
 ---
 
-Here we generate a holistic model to simulate the contribution of water flows to sustainable agriculture, food security and livelihoods. The objective is to make the linkage between sustainable eflows in the rivers, and the water-requirements of sustainable agriculture. The simulation offers insights into the role that river flows play in the ability of agriculture to be sustainable, and the consequent risks to agriculture when river flows are either optimal or when they become marginal. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given eflow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
+This document outlines a collection of holistic modeling techniques aimed at describing the link between river flows and livelihoods. We build our models using environmental flows (eflows) of water provided within a river or wetland to maintain aquatic ecosystems. These can also be thought of as ‘ecological water demand’ effectively a balance between water resources development and the need to protect freshwater-dependent ecosystems. The overall objective of the model we outline here is to simulate how river flow, in particular e-flow, impacts smallholder agriculture.  The objective is to make the linkage between sustainable eflows in the rivers, and the water-requirements of sustainable agriculture. The simulation offers insights into the role that river flows play in the ability of agriculture to be sustainable, and the consequent risks to agriculture when river flows are either optimal or when they become marginal. The simulations show a strong positive link between eflows and livelihoods and provide justification for understanding eflows as more than just a mechanism for positive biodiversity outcomes.
+
+We generate a holistic model to simulate the contribution of eflows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given eflow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
 
 ```{r, include = F}
 #set global options for knitr chunks 
@@ -254,7 +256,7 @@ return(list(scen1_downstream_river_flow=scen1_river_flow_downstream,
 
 #### Perform a Monte Carlo simulation with scenarios 
 
-Using the model function above, we can perform a Monte Carlo simulation with the `mcSimulation()` function from `decisionSupport`. This function generates distributions of all variables in the input table as well as the specified model outputs (see `return()` function above) by calculating random draws in our defined `limpopo_decision_function()`. We runa  visual assessment to ensure that all the variables in the input table are included in the model (erroneous variables listed there can cause issues with some of the post-hoc analyses). 
+Using the model function above, we can perform a Monte Carlo simulation with the `mcSimulation()` function from `decisionSupport`. This function generates distributions of all variables in the input table as well as the specified model outputs (see `return()` function above) by calculating random draws in our defined `limpopo_decision_function()`. We run a  visual assessment to ensure that all the variables in the input table are included in the model (erroneous variables listed there can cause issues with some of the post-hoc analyses). 
 
 The `numberOfModelRuns` argument is an integer indicating the number of model runs for the Monte Carlo simulation. Unless the model function is very complex, 10,000 runs is a reasonable choice (for complex models, 10,000 model runs can take a while, so especially when the model is still under development, it often makes sense to use a lower number).
 
@@ -362,10 +364,10 @@ natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv",fileEn
 # write the scenarios file
 write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
 ```
-
+Here we run the model with the `scenario_mc` function from the `decisionSupport` package [@R-decisionSupport]. The function essentially generates a Monte Carlo model with data from existing scenarios for some of the model inputs.
 
 ```{r mcSimulation_scenarios}
-# run the model with the scenario_mc function (a monte carlo with data from the scenarios for some inputs)
+# run the model with the scenario_mc function 
 mcSimulation_results <-
   scenario_mc(
     base_estimate = decisionSupport::estimate_read_csv("data/limpopo_input_table.csv"),
@@ -377,11 +379,19 @@ mcSimulation_results <-
   )
 ```
 
+## Results
+
+The results will refer to the scenarios we formulated in the model:
+
+* Scenario 1, no eflows: This is a scenario without eflows. Farmers extract water according to their irrigation needs. Extractions are only limited by the minimum water level that allows operating the pumps. The results of the simulations of this scenario forms a baseline for comparisons. We use this to describe the results of other simulations and for testing the model simulations of the other scenarios. We do this by subtracting the farm level water gap resulting from this scenario from the water gap for each of the other scenarios.
+
+* Scenario 3, dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
+
 #### Plot Net Present Value (NPV) distributions 
 
 We can use the `plot_distributions()` function to produce one of the several plotting options for distribution outputs. This shows us an overlay of the full results of the Monte Carlo model of the decision options, i.e. the expected NPV if we choose to do the intervention `Interv_NPV` or not do the intervention `NO_Interv_NPV`.
 
-Here's the difference between the crop water gap in eflow scenario 2 vs. the baseline (no eflows)
+Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between the baseline Scenario 1, no eflows and eflow Scenario 2, restricted extraction. In this eflow scenario eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events.
 
 ```{r}
 decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
@@ -392,7 +402,7 @@ decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
 
 In short, an eflow scenario that simply curtails extraction but doesn't alleviate sub-eflow flows, is likely to cause considerable irrigation water shortages.
 
-Here's the difference between the crop water gap in eflow scenario 3 (incl. dam releases) vs. the baseline (no eflows)
+Here's the difference between the crop water gap in eflow scenario 3 (incl. dam releases) vs. the baseline (no eflows):
 
 ```{r}
 decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
