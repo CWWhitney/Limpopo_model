@@ -18,9 +18,7 @@ We generate a holistic model to simulate the contribution of eflows to sustainab
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>", 
-  dpi=300,
-  fig.width=5, 
-  fig.height=3.5
+  dpi=300
 )
 
 # Load the necessary libraries 
@@ -401,6 +399,7 @@ gap_2_vs_1_plot <- decisionSupport::plot_distributions(mcSimulation_object = mcS
                                     vars = c("Mean_Crop_water_gap_difference_2_vs_1"),
                                     method = 'smooth_simple_overlay',
                                     x_axis_name = "Scenario 2 vs. Baseline",
+                                    y_axis_name = "",
                                     base_size = 7)
 
 # plot with patchwork
@@ -445,7 +444,7 @@ diff_2_vs_1_plot <- plot_cashflow(mcSimulation_object = mcSimulation_results,
 
 diff_3_vs_1_plot <- plot_cashflow(mcSimulation_object = mcSimulation_results, 
               cashflow_var_name = "Downstream_difference_3_vs_1",
-              y_axis_name = "Downstream difference (m3)",
+              y_axis_name = "",
               x_axis_name = "Month")
 
 # plot with patchwork
@@ -530,7 +529,8 @@ input_table <- read.csv("data/limpopo_input_table.csv")
 pls_plot_2_vs_1 <- plot_pls(pls_result_2_vs_1, 
                             input_table = input_table, 
                             threshold = 0.5, 
-                            y_axis_name = "Mean crop water gap scenario 2 vs. Baseline")
+                            x_axis_name = "",
+                            y_axis_name = "Scenario 2 vs. Baseline")
 
 
 pls_result_3_vs_1 <- plsr.mcSimulation(object = mcSimulation_pls,
@@ -540,18 +540,27 @@ pls_result_3_vs_1 <- plsr.mcSimulation(object = mcSimulation_pls,
 pls_plot_3_vs_1 <- plot_pls(pls_result_3_vs_1, 
                             input_table = input_table, 
                             threshold = 0.5, 
-                            y_axis_name = "Mean crop water gap scenario 3 vs. Baseline")
+                            y_axis_name = "Scenario 3 vs. Baseline")
 
 # plot with patchwork
 layout <- "
-           AAABBB
-           AAABBB
+           AAAA
+           AAAA
+           AAAA
+           AAAA
+           BBBB
+           BBBB
+           BBBB
+           BBBB
           "
 
 pls_plot_2_vs_1 + pls_plot_3_vs_1 + 
-plot_layout(guides = "collect", design = layout) 
+plot_layout(guides = "collect", design = layout) & 
+  theme(legend.position='bottom')
 
 ```
+
+The VIP scores show us the importance of each variable in the projection used in our PLS models for the mean crop water gap in scenario 2 and 3 vs. the baseline. 
 
 ### Addendum
 
