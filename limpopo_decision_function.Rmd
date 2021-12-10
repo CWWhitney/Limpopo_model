@@ -9,8 +9,6 @@ bibliography:
  - references.bib 
 ---
 
-This document outlines a collection of holistic modeling techniques aimed at describing the link between river flows and livelihoods. The model simulations we present here are generated using environmental flows (eflows), which are defined as water provided within a river or wetland to maintain aquatic ecosystems. These can also be thought of as ‘ecological water demand’ needed to protect freshwater-dependent ecosystems. The overall objective of the model we outline here is to simulate how river flow, in particular e-flow, impacts smallholder agriculture. The objective is to illustrate the linkage between sustainable eflows in the rivers, and the water-requirements of sustainable agriculture. The simulation offers insights into the role that river flows play in the ability of agriculture to be sustainable, and the consequent risks to agriculture when river flows are either optimal or when they become marginal. The simulations show a strong positive link between eflows and livelihoods and provide justification for understanding eflows as more than just a mechanism for positive biodiversity outcomes.
-
 We generate a holistic model to simulate the contribution of eflows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given eflow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
 
 ```{r, include = F}
@@ -88,7 +86,7 @@ Here we generate a model as a function using `decisionSupport` library we use th
 The following function defines 3 scenarios:
 
 * Scenario 1 - no eflows: This is a scenario without eflows. Farmers extract water according to their irrigation needs. Extractions are only limited by the minimum water level that allows operating the pumps.
-* Scenario 2 - restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events. We simulate the baseline with our own functions and some from the `nasapower` [@R-nasapower] and `Evapotranspiration` [@R-Evapotranspiration] packages.
+* Scenario 2 - restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events. We simulate Scenario 1 with our own functions and some from the `nasapower` [@R-nasapower] and `Evapotranspiration` [@R-Evapotranspiration] packages.
 * Scenario 3 - dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
 
 ```{r make_variables, include=FALSE}
@@ -168,11 +166,11 @@ water_losses_share<-(1-efficiency_pumps*efficiency_irrig_scheduling)
 
 irrigation_water_need<-total_irrigation_need/(1-water_losses_share)
 
-# eflow scenario 1 - no eflows
+# eflow Scenario 1 - no eflows
 
 scen1_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
 
-# eflow scenario 2 - eflows as a limit to extraction only
+# eflow Scenario 2 - eflows as a limit to extraction only
 
 # eflows are to be ensured whenever there is more water in the river than the eflow
 # requirement would mandate, i.e. farmers aren't allowed to extract water beyond
@@ -182,7 +180,7 @@ scen1_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-minimum_flo
 
 scen2_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-max(eflow[x],minimum_flow_to_operate_pumps)))
 
-# eflow scenario 3 - eflows are assured by dam releases
+# eflow Scenario 3 - eflows are assured by dam releases
 
 # whenever the present flow is below the eflow requirement, water is released
 # from an upstream dam to ensure that the eflows are met.
@@ -379,26 +377,26 @@ mcSimulation_results <-
 
 ## Results
 
-The results will refer to the scenarios we formulated in the model. We will use the results of the simulations of Scenario 1 as a baseline for comparisons. We programmed this scenario so that farmers extract water according to their irrigation needs and this is only limited by the minimum water level that allows them to operate their water pumps. We use this scenario for testing the model simulations of the other scenarios. We do this by subtracting the farm level water gap resulting from this scenario from the water gap for each of the other scenarios.
+The results will refer to the scenarios we formulated in the model. We will use the results of the simulations of Scenario 1 for comparisons. We programmed this scenario so that farmers extract water according to their irrigation needs and this is only limited by the minimum water level that allows them to operate their water pumps. We use this scenario for testing the model simulations of the other scenarios. We do this by subtracting the farm level water gap resulting from this scenario from the water gap for each of the other scenarios.
 
 #### Plot Net Present Value (NPV) distributions 
 
 We can use the `plot_distributions()` function to produce one of the several plotting options for distribution outputs. This shows us an overlay of the full results of the Monte Carlo model of the decision options, i.e. the expected NPV if we choose to do the intervention `Interv_NPV` or not do the intervention `NO_Interv_NPV`.
 
-Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between the baseline Scenario 1, no eflows and eflow Scenario 2, restricted extraction. We simulated this scenario so that whenever eflows aren't achieved, water extraction is curtailed and there are no measures to add water to the river.
+Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between Scenario 1, no eflows and eflow Scenario 2, restricted extraction. We simulated this scenario so that whenever eflows aren't achieved, water extraction is curtailed and there are no measures to add water to the river.
 
 ```{r}
 gap_2_n_1_plot <- decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
                                     vars = c("scen2_crop_water_gap", "scen1_crop_water_gap"),
                                     method = 'smooth_simple_overlay',
                                     colors = c("#D55E00", "#CC79A7"),
-                                    x_axis_name = "Scenario 2 and Baseline",
+                                    x_axis_name = "Scenario 2 and Scenario 1",
                                     base_size = 7)
 
 gap_2_vs_1_plot <- decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
                                     vars = c("Mean_Crop_water_gap_difference_2_vs_1"),
                                     method = 'smooth_simple_overlay',
-                                    x_axis_name = "Scenario 2 vs. Baseline",
+                                    x_axis_name = "Scenario 2 vs. 1",
                                     y_axis_name = "",
                                     base_size = 7)
 
@@ -413,39 +411,41 @@ plot_layout(guides = "collect", design = layout)
 
 ```
 
-This plot shows the differences in the simulation results between the baseline with no eflows and Scenario 2 wherein farmers are restricted from extracting water. The results indicate that this can lead to greater crop water gaps and have a negative impact on the livelihoods of smallholder farmers. In short, an eflow scenario that simply curtails extraction but doesn't alleviate sub-eflow flows, is likely to cause considerable irrigation water shortages.
+This plot shows the differences in the simulation results between Scenario 1 with no eflows and Scenario 2 wherein farmers are restricted from extracting water. The results indicate that this can lead to greater crop water gaps and have a negative impact on the livelihoods of smallholder farmers. In short, an eflow scenario that simply curtails extraction but doesn't alleviate sub-eflow flows, is likely to cause considerable irrigation water shortages.
 
-Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between the baseline Scenario 1, no eflows and Scenario 3, dam releases. We simulate this scenario so that when eflows aren't naturally met, water is released from upstream dams to ensure eflows. Smallholder farmers can access water so long as their pumps are working.
+Here we plot the difference in farm level crop water gap (i.e. how much water is missing from the smallholder farmers needs) between Scenario 1, no eflows and Scenario 3, dam releases. We simulate this scenario so that when eflows aren't naturally met, water is released from upstream dams to ensure eflows. Smallholder farmers can access water so long as their pumps are working.
 
 ```{r}
 
 decisionSupport::plot_distributions(mcSimulation_object = mcSimulation_results,
                                     vars = c("Mean_Crop_water_gap_difference_3_vs_1"),
                                     method = 'smooth_simple_overlay',
-                                    x_axis_name = "Scenario 3 vs. Baseline",
+                                    x_axis_name = "Scenario 3 vs. 1",
                                     base_size = 7)
 
 
 ```
 
-This plot shows the differences in the simulation results between the baseline with no eflows and Scenario 3 wherein water is released from upstream dams to maintain eflows. The results demonstrate the effectiveness of eflows for supporting smallholder farmers and their livelihoods by effectively eliminating the crop water gap. An eflow scenario that includes dam releases to ensure eflows benefits farmers by effectively precluding irrigation water shortfalls.
+This plot shows the differences in the simulation results between Scenario 1 with no eflows and Scenario 3 wherein water is released from upstream dams to maintain eflows. The results demonstrate the effectiveness of eflows for supporting smallholder farmers and their livelihoods by effectively eliminating the crop water gap. An eflow scenario that includes dam releases to ensure eflows benefits farmers by effectively precluding irrigation water shortfalls.
 
 #### Flow analysis
 
 Here we plot the distribution of downstream flow difference over the entire simulated year. For this we use the `plot_cashflow()` function, which uses the `Downstream_difference` output from the `mcSimulation()` function to show the difference in downstream river flow over time (across 12 months of the simulation).
 
-These are the flows for scenario 2 and for scenario 3 vs. the no-eflow baseline:
+These are the flows for Scenario 2 and for Scenario 3 vs. the no-eflow Scenario 1:
 
 ```{r plot_cashflow_downstream_2}
 diff_2_vs_1_plot <- plot_cashflow(mcSimulation_object = mcSimulation_results, 
               cashflow_var_name = "Downstream_difference_2_vs_1",
               y_axis_name = "Downstream difference (m3)",
-              x_axis_name = "Month")
+              x_axis_name = "Month", 
+              facet_labels = "Scenario 2 vs. 1")
 
 diff_3_vs_1_plot <- plot_cashflow(mcSimulation_object = mcSimulation_results, 
               cashflow_var_name = "Downstream_difference_3_vs_1",
               y_axis_name = "",
-              x_axis_name = "Month")
+              x_axis_name = "Month", 
+              facet_labels = "Scenario 3 vs. 1")
 
 # plot with patchwork
 layout <- "
@@ -458,7 +458,7 @@ plot_layout(guides = "collect", design = layout)
 
 ```
 
-And these are the dam releases required to maintain scenario 3:
+And these are the dam releases required to maintain Scenario 3:
 
 ```{r plot_cashflow_downstream_dam_releases}
 plot_cashflow(mcSimulation_object = mcSimulation_results, 
@@ -475,13 +475,13 @@ gap_2_vs_1_flow <- plot_cashflow(mcSimulation_object = mcSimulation_results,
               cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
               y_axis_name = "Crop water gap difference (share crop need)",
               x_axis_name = "Month", 
-              facet_labels = "Scenario 2 vs. base")
+              facet_labels = "Scenario 2 vs. 1")
 
 gap_3_vs_1_flow <- plot_cashflow(mcSimulation_object = mcSimulation_results, 
               cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
               y_axis_name = "",
               x_axis_name = "Month", 
-              facet_labels = "Scenario 3 vs. base")
+              facet_labels = "Scenario 3 vs. 1")
 
 # plot with patchwork
 layout <- "
@@ -490,8 +490,7 @@ layout <- "
           "
 
 gap_2_vs_1_flow + gap_3_vs_1_flow + 
-plot_layout(guides = "collect", design = layout) &
-  theme(legend.position='bottom')
+plot_layout(guides = "collect", design = layout) 
 ```
 
 #### Projection to Latent Structures (PLS) analysis
@@ -516,51 +515,39 @@ pls_result_2_vs_1 <- plsr.mcSimulation(object = mcSimulation_pls,
 
 ```
 
-We run the `plot_pls()` on the results from `plsr.mcSimulation()` with a number of standard settings. The length of the bars is equal to VIP with a vertical line at '1' on the x-axis indicating a standard cut-off for VIP used for variable selection. The overall plot only shows those variables with a VIP > 0.8, which is the common threshold for variable selection [@lanzanova_improving_2019, @luedeling_decision-focused_2016]. The colors of the bars represent the positive or negative coefficient of the given input variable with the output variable.
+We run the `plot_pls()` on the results from `plsr.mcSimulation()` with a number of standard settings. The length of the bars is equal to VIP with a vertical line at '1' on the x-axis indicating a standard cut-off for VIP used for variable selection. The colors of the bars represent the positive or negative coefficient of the given input variable with the output variable.
 
 Here we import the input table again to replace the labels for the variables on the y-axis. The input table can include a `label` and `variable` column. The standard labels (from the `variable` column) are usually computer readable and not very nice for a plot. The `plot_pls()` function uses the text in the `label` column as replacement for the default text in the `variable` column.  
 
 We perform the PLS analysis and assess the VIP score results for the mean crop water gap in Scenario 1 and 2 as outcome variables.
 
-```{r}
+```{r pls_plot_scen2}
 input_table <- read.csv("data/limpopo_input_table.csv")
 
 
-pls_plot_2_vs_1 <- plot_pls(pls_result_2_vs_1, 
+plot_pls(pls_result_2_vs_1, 
                             input_table = input_table, 
                             threshold = 0.5, 
-                            x_axis_name = "",
-                            y_axis_name = "Scenario 2 vs. Baseline")
+                            x_axis_name = "Variable Importance in the Projection score",
+                            y_axis_name = "Scenario 2 vs. 1")
 
+```
+
+```{r pls_plot_scen3}
 
 pls_result_3_vs_1 <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "Mean_Crop_water_gap_difference_3_vs_1", 
                   ncomp = 1)
 
-pls_plot_3_vs_1 <- plot_pls(pls_result_3_vs_1, 
+plot_pls(pls_result_3_vs_1, 
                             input_table = input_table, 
                             threshold = 0.5, 
-                            y_axis_name = "Scenario 3 vs. Baseline")
-
-# plot with patchwork
-layout <- "
-           AAAA
-           AAAA
-           AAAA
-           AAAA
-           BBBB
-           BBBB
-           BBBB
-           BBBB
-          "
-
-pls_plot_2_vs_1 + pls_plot_3_vs_1 + 
-plot_layout(guides = "collect", design = layout) & 
-  theme(legend.position='bottom')
+                            x_axis_name = "Variable Importance in the Projection score",
+                            y_axis_name = "Scenario 3 vs. 1")
 
 ```
 
-The VIP scores show us the importance of each variable in the projection used in our PLS models for the mean crop water gap in scenario 2 and 3 vs. the baseline. 
+The VIP scores show us the importance of each variable in the projection used in our PLS models for the mean crop water gap in Scenario 2 and 3 vs. Scenario 1. 
 
 ### Addendum
 
