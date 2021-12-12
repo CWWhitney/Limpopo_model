@@ -370,7 +370,7 @@ mcSimulation_results <-
     scenarios = read.csv("data/scenarios_1980_2020.csv", fileEncoding =
                            "UTF-8-BOM"),
     model_function = limpopo_decision_function,
-    numberOfModelRuns = 1e4, #run 10,000 times
+    numberOfModelRuns = 1e2, #run 10,000 times
     functionSyntax = "plainNames"
   )
 ```
