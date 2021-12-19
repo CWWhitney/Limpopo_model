@@ -408,7 +408,7 @@ monthly_crop_water_needs <- plot_cashflow(mcSimulation_object = plotting_simulat
               cashflow_var_name = "cropwater_need",
               y_axis_name = "a",
               x_axis_name = "Month", 
-              facet_labels = "") + theme(legend.position = "none") + labs(y = expression(Monthly~crop~water~need~(m^3)))
+              facet_labels = "") + labs(y = expression(Monthly~crop~water~need~(m^3)))
 
 monthly_crop_water_needs
 
@@ -436,7 +436,7 @@ monthly_irrigation_water_needs <- plot_cashflow(mcSimulation_object = plotting_s
               cashflow_var_name = "irrigation_water_need",
               y_axis_name = "a",
               x_axis_name = "Month", 
-              facet_labels = "") + theme(legend.position = "none") + labs(y = expression(Monthly~irrigation~water~need~(m^3)))
+              facet_labels = "") + labs(y = expression(Monthly~irrigation~water~need~(m^3)))
 
 monthly_irrigation_water_needs
 
