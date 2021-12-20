@@ -388,6 +388,7 @@ mcSimulation_results <-
   )
 ```
 
+We use the `plsr.mcSimulation` function of the `decisionSupport` package to run Partial Least Squares regression on the model outputs. Projection to Latent Structures (PLS), also sometimes known as Partial Least Squares regression is a multivariate statistical technique that can deal with multiple colinear dependent and independent variables [@wold_pls-regression_2001]. It can be used as another means to assess the outcomes of a Monte Carlo model. We use the Variable Importance in the Projection (VIP) scores to identify important variables. VIP scores estimate the importance of each variable in the projection used in a PLS model. VIP is a parameter used for calculating the cumulative measure of the influence of individual variables on the model. Read more in ['A Simple Explanation of Partial Least Squares' by Kee Siong Ng](http://users.cecs.anu.edu.au/~kee/pls.pdf). More information on all these procedures is contained in the [decisionSupport manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf), especially under `welfareDecisionAnalysis`.  
 
 ## Results
 
@@ -617,7 +618,7 @@ ggsave("figures/Fig_13_monthly_change_in_downstream_river_flow_live_eflows.png",
 
 ## Sensitivity analysis
 
-We use the `plsr.mcSimulation` function of the `decisionSupport` package to run Partial Least Squares regression on the model outputs. We use the Variable Importance in the Projection (VIP) scores to identify important variables.
+Here we apply the aforementioned post-hoc analysis to the `mcSimulation()` outputs with `plsr.mcSimulation()` to determine the VIP score and coefficients of our PLS regression models. This functions use the outputs of the `mcSimulation()` selecting all the input variables from the decision analysis function in the parameter `object` and then runs a PLS regression with an outcome variable defined in the parameter `resultName`. We also need to import the input table again to replace the labels for the variables on the y-axis. The input table can include a `label` and `variable` column. The standard labels (from the `variable` column) are usually computer readable and not very nice for a plot. The `plot_pls()` function uses the text in the `label` column as replacement for the default text in the `variable` column.  
 
 ### Crop water needs 
 
@@ -723,7 +724,7 @@ plot_pls(pls_result_2,
 ggsave("figures/Fig_18_PLS_livelihoods_eflows_dam_release.png", width=7, height=5)
 ```
 
-More information on all these procedures is contained in the [decisionSupport manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf), especially under `welfareDecisionAnalysis`. This document was generated using the `rmarkdown` [@R-rmarkdown] and `knitr` [@R-knitr] packages in the R programming language [@R-base].
+This document was generated using the `rmarkdown` [@R-rmarkdown] and `knitr` [@R-knitr] packages in the R programming language [@R-base].
 
 ### Estimate values
  
