@@ -47,7 +47,7 @@ Efficiency of irrigation scheduling and allocation,effi_sched,tnorm_0_1,0.6,0.9,
 ,,,,,
 Total irrigable area,available_area,posnorm,100,300,Available area
 Share of land that is not used because of socio-political obstacles,unused_sociopolit,tnorm_0_1,0.2,0.4,Share of unused lands
-Number of subsistence households,n_subsistence_farmers,posnorm,30,200,Numer of subsistence farmers
+Number of subsistence households,n_subsistence_farmers,posnorm,30,200,Number of subsistence farmers
 Farm size per subsistence households,necessary_farm_size_per_household,posnorm,1.5,2.5,Needed farm size per household
 ,,,,,
 eflow in month 1,eflow_1,posnorm,1658637.363,2487956.044,eflow_1
