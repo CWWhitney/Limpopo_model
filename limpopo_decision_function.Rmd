@@ -403,16 +403,18 @@ We use the `plsr.mcSimulation` function of the `decisionSupport` package to run 
 
 plotting_simulations <- mcSimulation_results 
 
-
 Fig_total_annual_crop_water_irrigation_need <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
-                                    vars = c("yearly_crop_water_need", "yearly_irrigation_water_need"),
+                                    vars = c("yearly_crop_water_need",
+                                             "yearly_irrigation_water_need"),
                                     method = 'smooth_simple_overlay',
                                     x_axis_name = "1",
                                     y_axis_name = "Distribution density",
                                     base_size = 13)  + 
-  labs(x = expression(Total~annual~water~need~(m^3))) + 
+  ggplot2::theme_classic() + 
+  ggplot2::labs(x = expression(Total~annual~water~need~(m^3))) + 
   ggplot2::labs(fill = "") +
-       scale_fill_discrete(labels=c('Crops', 'Irrigation')) +   theme(legend.position="bottom")
+  ggplot2::scale_fill_discrete(labels=c('Crops', 'Irrigation')) +     
+  ggplot2::theme(legend.position="bottom") 
 
 
 Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plotting_simulations, 
@@ -424,25 +426,25 @@ Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plottin
 
 ```
 
-```{r plot_baselin_results, include = F}
+```{r plot_baseline_results, include = F}
 library(patchwork)
 
-combined_fig <- Fig_total_annual_crop_water_irrigation_need +
+plot_baseline_results <- Fig_total_annual_crop_water_irrigation_need +
   inset_element(Fig_monthly_irrigation_water_need, 
                   left = 0.29, 
                   bottom = 0.29, 
                   right = 0.97, 
-                  top = 0.97) 
+                  top = 0.97) + 
+  plot_annotation(title = "Baseline scenario")
 
-# combined_fig + 
+# plot_baseline_results + 
 #   plot_layout(ncol = 1, guides = "collect")
 
   # plot_annotation(tag_levels = 'a') +
 # guides = "collect"
 
-ggsave("figures/combined_fig_water_needs.png", width=10, height=5)
+ggsave("figures/water_needs.png", width=10, height=5)
 
-combined_fig
 
 ```
 
@@ -452,90 +454,107 @@ combined_fig
 In the "No eflows" scenario, farmers currently face considerable periods of water shortages. On average across all months of the year, between 0 and 80% of crop water needs could not be met by irrigation water extracted from the river.
 
 
-```{r gap_baseline-dist, include = F}
+```{r gap_no_eflow-dist, include = F}
 
 plotting_simulations$y$scen1_crop_water_gap<-plotting_simulations$y$scen1_crop_water_gap*100
 
-Fig_5_baseline_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
-                                    vars = c("scen1_crop_water_gap"),
+Fig_baseline_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
+                                    vars = c("scen1_crop_water_gap"), #annual
                                     method = 'smooth_simple_overlay',
-                                    x_axis_name = expression(atop("Crop water gap (% of needed irrigation water)", paste("for the no e-flows scenario"))),
+                                    x_axis_name = expression(atop("Annual crop water gap", paste("(% of needed irrigation water)"))),
                                     y_axis_name = "Distribution density",
                                     base_size = 13) + theme(legend.position = "none")
 
-```
 
-The crop water gap varies across the months of the year, with greatest irrigation water shortfalls during the dry-season months.
+# The crop water gap varies across the months of the year, with greatest irrigation water shortfalls during the dry-season months.
 
-```{r gap_baseline-flow, include = F}
 plotting_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]<-plotting_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]*100
 
-Fig_6_monthly_baseline_crop_water_gap <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+Fig_monthly_baseline_crop_water_gap <- plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Crop_water_gap_scen1_",
               y_axis_name = "a",
               x_axis_name = "Month", 
-              facet_labels = "") + labs(y = expression(atop("Monthly crop water gap (%)", paste("for the no e-flows scenario"))))
+              facet_labels = "") + labs(y = expression("Monthly crop water gap (%)"))
+
+#Downstream river flows also vary throughout the year under the no eflows scenario.
+
+Fig_monthly_downstream_river_flow <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+              cashflow_var_name = "Downstream_river_flow_1_",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + labs(y = expression(Downstream~river~flow~(m^3)))
 
 ```
 
-Downstream river flows also vary throughout the year.
+```{r plot_no_eflow_results, include = F}
+library(patchwork)
 
-```{r flow_baseline, include = F}
+Fig_baseline_crop_water_gap | 
+(Fig_monthly_baseline_crop_water_gap /
+Fig_monthly_downstream_river_flow) +
+  plot_layout(ncol = 1, guides = "collect") + 
+  plot_annotation(title = "No eflows scenario")
 
+  # plot_annotation(tag_levels = 'a') +
+# guides = "collect"
 
-Fig_7_monthly_downstream_river_flow <- plot_cashflow(mcSimulation_object = plotting_simulations, 
-              cashflow_var_name = "Downstream_river_flow_1_",
-              y_axis_name = "a",
-              x_axis_name = "Month", 
-              facet_labels = "") + labs(y = expression(Downstream~river~flow~(m^3)~no~e-flows))
-
-
+ggsave("figures/no_eflows.png", width=10, height=5)
 
 ```
 
 ### Environmental e-flows scenario
 
-Here the distribution of the changes in the crop water gap through environmental e-flows.
 
-```{r eflows_gap_change, include = F}
+```{r plot_eflows_gap_change, include = F}
+# Here the distribution of the changes in the crop water gap through environmental e-flows.
+
 plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1<-plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1*100
 
 Fig_8_environmental_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
                                     vars = c("Mean_Crop_water_gap_difference_2_vs_1"),
                                     method = 'smooth_simple_overlay',
-                                    x_axis_name = expression(atop("Crop water gap change", paste("through environmental e-flows (percentage points)"))),
+                                    x_axis_name = expression(atop("Crop water gap change", paste("through environmental e-flows (perc. points)"))),
                                     y_axis_name = "Distribution density",
                                     base_size = 13) + theme(legend.position = "none")
 
 
 # length(which(plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1<20))/length(plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1)
 
+# Here are the impacts of an environmentally focused e-flow policy on the crop water gap in each month.
 
-```
-
-Here are the impacts of an environmentally focused e-flow policy on the crop water gap in each month.
-
-```{r plot_eflow_gap, include = F}
 plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]<-plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
 
 Fig_9_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
               y_axis_name = "a",
               x_axis_name = "Month", 
-              facet_labels = "") + labs(y = expression(atop("Crop water gap change (perc. points)", paste("by environmental e-flows"))))
+              facet_labels = "") + 
+  labs(y = expression("Crop water gap change (perc. points)"))
 
+# Here's the impact on streamflow:
 
-
-```
-
-Here's the impact on streamflow:
-
-```{r plot_eflow_chage_downstream, include = F}
 Fig_10_monthly_change_in_downstream_river_flow_env_eflows <- plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Downstream_difference_2_vs_1",
               y_axis_name = "a",
               x_axis_name = "Month", 
-              facet_labels = "") + labs(y = expression(atop(Downstream~river~flow~change, paste(by~environmental~e-flows~(m^3)))))
+              facet_labels = "") + 
+  labs(y = expression(Downstream~river~flow~change, paste(~(m^3))))
+
+```
+
+```{r plot_eflow_results, include = F}
+library(patchwork)
+
+ Fig_8_environmental_eflow_policy_effect_crop_water_gap | 
+   (Fig_9_monthly_env_eflow_increase_crop_water_gap /
+ Fig_10_monthly_change_in_downstream_river_flow_env_eflows) +
+   plot_layout(ncol = 1, guides = "collect") + 
+   plot_annotation(title = "eflows scenario")
+
+  # plot_annotation(tag_levels = 'a') +
+# guides = "collect"
+
+ggsave("figures/test.png", width=10, height=5)
 
 ```
 
