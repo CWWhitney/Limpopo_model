@@ -474,27 +474,15 @@ of water shortages. On average across all months of the year, between 0
 and 80% of crop water needs could not be met by irrigation water
 extracted from the river.
 
-The crop water gap varies across the months of the year, with greatest
-irrigation water shortfalls during the dry-season months.
-
-Downstream river flows also vary throughout the year.
-
 ### Environmental e-flows scenario
-
-Here the distribution of the changes in the crop water gap through
-environmental e-flows.
-
-Here are the impacts of an environmentally focused e-flow policy on the
-crop water gap in each month.
-
-Here’s the impact on streamflow:
 
 ### “Livelihoods” e-flow scenario
 
-Here are the impacts of an environmentally focused e-flow policy on the
-crop water gap in each month.
+## Dam release
 
-Here’s the impact on streamflow:
+## Downstream effect
+
+Here’s the impact on streamflow
 
 ## Sensitivity analysis
 
@@ -520,10 +508,6 @@ replacement for the default text in the `variable` column.
 ### Environmental e-flows
 
 ### Livelihoods e-flows
-
-This document was generated using the `rmarkdown` (Allaire et al. 2022)
-and `knitr` (Xie 2022) packages in the R programming language (R Core
-Team 2022).
 
 ### Estimate values
 
@@ -612,6 +596,10 @@ Team 2022).
 
 This table contains the estimate values used for the Monte Carlo
 analysis
+
+This document was generated using the `rmarkdown` (Allaire et al. 2022)
+and `knitr` (Xie 2022) packages in the R programming language (R Core
+Team 2022).
 
 ### References
 
