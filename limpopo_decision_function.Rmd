@@ -395,11 +395,12 @@ write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 
 We use the `plsr.mcSimulation` function of the `decisionSupport` package to run Partial Least Squares regression on the model outputs. Projection to Latent Structures (PLS), also sometimes known as Partial Least Squares regression is a multivariate statistical technique that can deal with multiple colinear dependent and independent variables [@wold_pls-regression_2001]. It can be used as another means to assess the outcomes of a Monte Carlo model. We use the Variable Importance in the Projection (VIP) scores to identify important variables. VIP scores estimate the importance of each variable in the projection used in a PLS model. VIP is a parameter used for calculating the cumulative measure of the influence of individual variables on the model. Read more in ['A Simple Explanation of Partial Least Squares' by Kee Siong Ng](http://users.cecs.anu.edu.au/~kee/pls.pdf). More information on all these procedures is contained in the [decisionSupport manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf), especially under `welfareDecisionAnalysis`.  
 
-## Results
-
 ### Water needs
 
+Here the general estimates about needed water for crops
+
 ```{r plot_water_needs, include = F}
+
 
 plotting_simulations <- mcSimulation_results 
 
@@ -451,18 +452,6 @@ In the "No eflows" scenario, farmers currently face considerable periods of wate
 
 ```{r gap_no_eflow-dist, include = F}
 
-plotting_simulations$y$scen1_crop_water_gap <- plotting_simulations$y$scen1_crop_water_gap*100
-
-Fig_baseline_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
-                                    vars = c("scen1_crop_water_gap"), #annual
-                                    method = 'smooth_simple_overlay',
-                                    x_axis_name = expression(atop("Annual crop water gap", 
-                                                                  paste("(% of needed irrigation water)"))),
-                                    y_axis_name = "Distribution density",
-                                    base_size = 13) + 
-                                theme(legend.position = "none")
-
-
 # The crop water gap varies across the months of the year, with greatest irrigation water shortfalls during the dry-season months.
 
 plotting_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]*100
@@ -495,19 +484,25 @@ ggsave("figures/no_eflows.png", width=10, height=5)
 
 
 ```{r plot_eflows_gap_change, include = F}
-# Here the distribution of the changes in the crop water gap through environmental e-flows.
+# Here the distribution of the changes in the crop water gap through e-flows.
+
+plotting_simulations$y$scen1_crop_water_gap <- plotting_simulations$y$scen1_crop_water_gap*100
 
 plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1 <- plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1*100
 
-Fig_environmental_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
-                                    vars = c("Mean_Crop_water_gap_difference_2_vs_1"),
+plotting_simulations$y$Mean_Crop_water_gap_difference_3_vs_1 <- plotting_simulations$y$Mean_Crop_water_gap_difference_3_vs_1*100
+
+Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
+                                    vars = c("scen1_crop_water_gap",
+                                             "Mean_Crop_water_gap_difference_2_vs_1", 
+                                             "Mean_Crop_water_gap_difference_3_vs_1"),
                                     method = 'smooth_simple_overlay',
-                                    x_axis_name = expression(atop("Crop water gap change", paste("through environmental e-flows (perc. points)"))),
+                                    x_axis_name = expression("Annual crop water gap % of needed irrigation water"),
                                     y_axis_name = "Distribution density",
-                                    base_size = 13) + theme(legend.position = "none")
-
-
-# length(which(plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1<20))/length(plotting_simulations$y$Mean_Crop_water_gap_difference_2_vs_1)
+                                    base_size = 13) + 
+                    ggplot2::theme_classic() + 
+                    ggplot2::labs(fill = "") +
+                    ggplot2::scale_fill_discrete(labels=c('Baseline', 'Environmental eflows', 'Livelihoods eflows')) 
 
 # Here are the impacts of an environmentally focused e-flow policy on the crop water gap in each month.
 
@@ -520,38 +515,25 @@ Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_obje
               facet_labels = "") + 
   labs(y = expression("Crop water gap change (perc. points)"))
 
+Fig_eflow_policy_effect_crop_water_gap
 
 ```
 
 ```{r plot_eflow_results, include = F}
 library(patchwork)
 
- Fig_environmental_eflow_policy_effect_crop_water_gap + 
-   Fig_monthly_env_eflow_increase_crop_water_gap +
+ Fig_eflow_policy_effect_crop_water_gap + 
    plot_layout(guides = "collect") + 
-   plot_annotation(title = "Environmental eflows scenario")
+   plot_annotation(title = "eflows scenarios") &     
+                    ggplot2::theme(legend.position="bottom") 
 
-  # plot_annotation(tag_levels = 'a') +
-# guides = "collect"
-
-ggsave("figures/environmental_eflow.png", width=10, height=5)
+ggsave("figures/All_eflows.png", width=10, height=5)
 
 ```
 
 ### "Livelihoods" e-flow scenario
 
 ```{r plot_livelihoods_eflow, include = F}
-plotting_simulations$y$Mean_Crop_water_gap_difference_3_vs_1 <- plotting_simulations$y$Mean_Crop_water_gap_difference_3_vs_1*100
-
-Fig_livelihoods_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
-                                    vars = c("Mean_Crop_water_gap_difference_3_vs_1"),
-                                    method = 'smooth_simple_overlay',
-                                    x_axis_name = "",
-                                    y_axis_name = "Distribution density",
-                                    base_size = 13) + 
-                                    theme(legend.position = "none") + 
-                                    labs(x = expression(atop("Crop water gap change", 
-                                            paste("through livelihoods e-flows (percentage points)"))))
 
 # Here are the impacts of an livelihoods focused e-flow policy on the crop water gap in each month.
 
@@ -569,13 +551,10 @@ Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_obje
 ```{r plot_livelihood_results, include = F}
 library(patchwork)
 
-Fig_livelihoods_eflow_policy_effect_crop_water_gap +
   Fig_monthly_env_eflow_increase_crop_water_gap + 
   plot_annotation(title = "Livelihoods scenario") 
 
-
 ggsave("figures/livelihoods_eflows.png", width=10, height=5)
-
 
 ```
 
