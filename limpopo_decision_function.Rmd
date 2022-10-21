@@ -572,7 +572,7 @@ Fig_12_required_dam_release <- plot_cashflow(mcSimulation_object = plotting_simu
 
 ## Downstream effect
 
-Here's the impact on streamflow 
+Here's the impact on stream flow 
 
 ```{r stream-flow, include = F}
 
