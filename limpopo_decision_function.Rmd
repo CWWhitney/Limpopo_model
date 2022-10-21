@@ -1,5 +1,5 @@
 ---
-title: "Modeling the contribution of eflows to sustainable agriculture, food security and livelihoods in South Africa's Limpopo basin"
+title: "Modeling the contribution of e-flows to sustainable agriculture, food security and livelihoods in South Africa's Limpopo basin"
 author: "Eike Luedeling, Cory Whitney"
 output: github_document
 bibliography:
@@ -7,7 +7,7 @@ bibliography:
  - references.bib 
 ---
 
-We generate a holistic model to simulate the contribution of eflows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given eflow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
+We generate a holistic model to simulate the contribution of e-flows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given e-flow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
 
 ```{r, include = F}
 #set global options for knitr chunks 
@@ -91,9 +91,9 @@ Here we generate a model as a function using `decisionSupport` library we use th
 
 The following function defines 3 scenarios:
 
-1. No eflows: This is a scenario without eflows. Farmers extract water according to their irrigation needs. Extractions are only limited by the minimum water level that allows operating the pumps.
-1. Restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events. We simulate Scenario 1 with our own functions and some from the `nasapower` [@R-nasapower] and `Evapotranspiration` [@R-Evapotranspiration] packages.
-1. Dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
+1. UNRES – baseline, unrestricted water use with no e-flows: This is a scenario without eflows. Farmers extract water according to their irrigation needs. Extractions are only limited by the minimum water level that allows operating the pumps.
+1. EFLOW – E-flow through abstraction control (without using dam releases) with restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events. We simulate Scenario 1 with our own functions and some from the `nasapower` [@R-nasapower] and `Evapotranspiration` [@R-Evapotranspiration] packages.
+1. SUPPL – E-flows achieved through abstraction control and dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
 
 
 ```{r make_variables, include=F}
@@ -418,13 +418,13 @@ Fig_total_annual_crop_water_irrigation_need <-
                     ggplot2::scale_fill_discrete(labels=c('Crops', 'Irrigation')) +     
                     ggplot2::theme(legend.position="bottom") 
 
-
 Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "irrigation_water_need",
               y_axis_name = "",
               x_axis_name = "Month", 
               facet_labels = "") + 
   labs(y = expression(Monthly~irrigation~water~need~(m^3)))
+
 
 ```
 
@@ -437,16 +437,16 @@ Fig_total_annual_crop_water_irrigation_need +
                   bottom = 0.29, 
                   right = 0.97, 
                   top = 0.97) + 
-  plot_annotation(title = "Baseline scenario")
+  plot_annotation(title = "Annual crop water need")
 
 
-ggsave("figures/water_needs.png", width=10, height=5)
+ggsave("figures/Fig_3_water_needs.png", width=10, height=5)
 
 
 ```
 
 
-### "No eflows" scenario
+### e-flows all scenarios flow plots
 
 In the "No eflows" scenario, farmers currently face considerable periods of water shortages. On average across all months of the year, between 0 and 80% of crop water needs could not be met by irrigation water extracted from the river.
 
@@ -454,34 +454,78 @@ In the "No eflows" scenario, farmers currently face considerable periods of wate
 
 # The crop water gap varies across the months of the year, with greatest irrigation water shortfalls during the dry-season months.
 
+# plotting_simulations$y[,paste0("cropwater_need",1:12)] <- plotting_simulations$y[,paste0("cropwater_need",1:12)]*100
+# 
+# monthly_crop_water_needs <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+#               cashflow_var_name = "cropwater_need",
+#               y_axis_name = "",
+#               x_axis_name = "", 
+#               facet_labels = "") + 
+#   annotate(geom="text", x=3, y=30, 
+#            label= expression(Monthly~crop~water~need~(m^3))) 
+
+plotting_simulations <- mcSimulation_results 
+
 plotting_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]*100
 
-Fig_monthly_baseline_crop_water_gap <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+Fig_monthly_baseline_crop_water_gap <- 
+  plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Crop_water_gap_scen1_",
-              y_axis_name = "a",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") + 
+            labs(y = expression("")) + 
+  annotate(geom="text", x=3, y=93, 
+           label=expression(atop("Total gap (%) UNRES", 
+                   paste("unrestricted water use")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank())
+
+
+plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+
+monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") + 
+  annotate(geom="text", x=3, y=77, 
+           label=expression(atop("% change EFLOW", 
+                                 paste("abstraction control")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank()) + 
+  labs(y = "Monthly crop water gap for all e-flows scenarios")
+
+plotting_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
+
+monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
+              y_axis_name = "",
               x_axis_name = "Month", 
               facet_labels = "") + 
-            labs(y = expression("Monthly crop water gap (%)"))
+  annotate(geom="text", x=3, y= -80, 
+            label=(expression(atop("% change SUPPL", 
+                                   paste("dam releases")))))
 
 ```
 
 ```{r plot_no_eflow_results, include = F}
 library(patchwork)
 
-Fig_baseline_crop_water_gap | 
-(Fig_monthly_baseline_crop_water_gap) +
-  plot_layout(ncol = 1, guides = "collect") + 
-  plot_annotation(title = "No eflows scenario")
+Fig_monthly_baseline_crop_water_gap +
+  monthly_crop_water_gap_environmental +
+  monthly_crop_water_gap_suppl +
+  plot_layout(ncol = 1, guides = "collect")  
+  #plot_annotation(title = "Monthly crop water gap for all e-flows scenarios")
 
   # plot_annotation(tag_levels = 'a') +
 # guides = "collect"
 
-ggsave("figures/no_eflows.png", width=10, height=5)
+ggsave("figures/Fig_5_flows.png", width=7, height=10)
 
 ```
 
-### Environmental e-flows scenario
-
+### Anual gap for all e-flows scenarios
 
 ```{r plot_eflows_gap_change, include = F}
 # Here the distribution of the changes in the crop water gap through e-flows.
@@ -501,8 +545,8 @@ Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mc
                                     y_axis_name = "Distribution density",
                                     base_size = 13) + 
                     ggplot2::theme_classic() + 
-                    ggplot2::labs(fill = "") +
-                    ggplot2::scale_fill_discrete(labels=c('Baseline', 'Environmental eflows', 'Livelihoods eflows')) 
+                    ggplot2::labs(fill = "")  +
+                     ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstrction control', 'SUPPL dam releases')) 
 
 # Here are the impacts of an environmentally focused e-flow policy on the crop water gap in each month.
 
@@ -513,9 +557,8 @@ Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_obje
               y_axis_name = "",
               x_axis_name = "Month", 
               facet_labels = "") + 
-  labs(y = expression("Crop water gap change (perc. points)"))
+  labs(y = expression("Crop water gap change (%)"))
 
-Fig_eflow_policy_effect_crop_water_gap
 
 ```
 
@@ -524,41 +567,16 @@ library(patchwork)
 
  Fig_eflow_policy_effect_crop_water_gap + 
    plot_layout(guides = "collect") + 
-   plot_annotation(title = "eflows scenarios") &     
+   plot_annotation(title = "Crop water gap for all e-flows scenarios") &     
                     ggplot2::theme(legend.position="bottom") 
 
-ggsave("figures/All_eflows.png", width=10, height=5)
+ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
 
 ```
 
-### "Livelihoods" e-flow scenario
+Here are the impacts of an livelihoods focused e-flow policy on the crop water gap in each month.
 
-```{r plot_livelihoods_eflow, include = F}
-
-# Here are the impacts of an livelihoods focused e-flow policy on the crop water gap in each month.
-
-plotting_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
-
-Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = plotting_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  labs(y = expression("Crop water gap change (perc. points)"))
-
-```
-
-```{r plot_livelihood_results, include = F}
-library(patchwork)
-
-  Fig_monthly_env_eflow_increase_crop_water_gap + 
-  plot_annotation(title = "Livelihoods scenario") 
-
-ggsave("figures/livelihoods_eflows.png", width=10, height=5)
-
-```
-
-## Dam release
+## Dam releases
 
 ```{r dam_release, include = F}
 Fig_12_required_dam_release <- plot_cashflow(mcSimulation_object = plotting_simulations, 
@@ -569,53 +587,68 @@ Fig_12_required_dam_release <- plot_cashflow(mcSimulation_object = plotting_simu
 
 ```
 
-
 ## Downstream effect
 
 Here's the impact on stream flow 
 
 ```{r stream-flow, include = F}
 
-#Downstream river flows also vary throughout the year under the no eflows scenario.
+#Downstream river flows also vary throughout the year under the no e-flows scenario.
 
-Fig_monthly_downstream_river_flow <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+Fig_monthly_downstream_river_flow <-
+  plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Downstream_river_flow_1_",
               y_axis_name = "",
               x_axis_name = "", 
               facet_labels = "") + 
-                labs(title = "Scenario 1: Baseline")
+  annotate(geom="text", x=3, y= 200000000, 
+            label=(expression(atop("UNRES", 
+                                   paste("(unrestricted) baseline"))))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank())
 
-# Here's the impact on streamflow Downstream_difference_2_vs_1:
+# Here's the impact on stream flow Downstream_difference_2_vs_1:
 
-Fig_monthly_change_in_downstream_river_flow_env_eflows <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+Fig_monthly_change_in_downstream_river_flow_env_eflows <-
+  plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Downstream_difference_2_vs_1",
               y_axis_name = "",
               x_axis_name = "", 
-              facet_labels = "") + 
-  labs(title = "Scenario 2: Environmental e-flows")
+              facet_labels = "") +  
+  annotate(geom="text", x=3, y= 250000, 
+            label=(expression(atop("EFLOW", 
+                                   paste("abstrction control"))))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank()) + 
+  labs(y = expression(Downstream~river~flow~(m^3)))
 
-Fig_monthly_change_in_downstream_river_flow_live_eflows <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+Fig_monthly_change_in_downstream_river_flow_live_eflows <-
+  plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "Downstream_difference_3_vs_1",
               y_axis_name = "",
               x_axis_name = "Month", 
               facet_labels = "") + 
-    labs(title = "Scenario 3: livelihoods e-flows")
+  annotate(geom="text", x=9, y= 400000, 
+            label=(expression(atop("SUPPL", 
+                                   paste("dam releases")))))
+
+#('UNRES (unrestricted) baseline', 'EFLOW abstrction control', 'SUPPL dam releases')) 
 
 ```
 
-```{r plot_stream_flow, include = F}
+```{r plot_downstream_flow, include = F}
 library(patchwork)
 
   Fig_monthly_downstream_river_flow + 
   Fig_monthly_change_in_downstream_river_flow_env_eflows +
     Fig_monthly_change_in_downstream_river_flow_live_eflows +
-  plot_layout(ncol = 1, guides = "collect") + 
-    plot_annotation(title = expression(Downstream~river~flow~(m^3))) 
+  plot_layout(ncol = 1, guides = "collect")  
+    # plot_annotation(title = expression(Downstream~river~flow~(m^3))) 
 
   # plot_annotation(tag_levels = 'a') +
 # guides = "collect"
 
-ggsave("figures/downstream.png", width=5, height=10)
+ggsave("figures/Fig_6_downstream.png", width=7, height=10)
 
 ```
 
@@ -642,11 +675,8 @@ Fig_14_PLS_crop_water_need <- plot_pls(pls_result_crop_water_need,
                             y_axis_name = "Model input variables")
 
 
-```
-
 ### Irrigation demand
 
-```{r pls-irrigation_demand, echo=F}
 mcSimulation_pls<-plotting_simulations
 mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 
@@ -657,31 +687,26 @@ pls_result_irrig_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
 Fig_15_PLS_irrigation_water_need <- plot_pls(pls_result_irrig_water_need, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for annual irrigation water needs"))),
-                            y_axis_name = "Model input variables")
+                            x_axis_name = expression(atop("Variable Importance in the Projection", 
+                                                          paste("score for annual irrigation water needs"))))
 
 
-```
+### No e-flows
 
-### No eflows
 
-```{r pls-baseline, echo=F}
 pls_result_1 <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "scen1_crop_water_gap", 
                   ncomp = 1)
 
-Fig_16_PLS_baseline_crop_water_gap <- plot_pls(pls_result_1, 
+PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for crop water gap with no e-flows"))),
+                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for crop water gap for UNRES – baseline, unrestricted water use scenario"))),
                             y_axis_name = "Model input variables")
-
-```
-
 
 ### Environmental e-flows
 
-```{r pls-enviro_eflows, echo=F}
+
 mcSimulation_pls <- plotting_simulations
 mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 
@@ -690,20 +715,13 @@ pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
                   ncomp = 1)
 
 
-
-Fig_17_PLS_environmental_eflows_crop_water_gap <- plot_pls(pls_result_2, 
+Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for environmentnal e-flows"))),
-                            y_axis_name = "Model input variables")
+                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for environmentnal e-flows"))))
 
+### SUPPL dam release - Livelihoods e-flows
 
-```
-
-
-### Livelihoods e-flows
-
-```{r pls-livelihoods, echo=F}
 mcSimulation_pls <- plotting_simulations
 mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 
@@ -711,12 +729,27 @@ pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "scen3_total_dam_release", 
                   ncomp = 1)
 
-Fig_18_PLS_livelihoods_eflows_dam_release <- plot_pls(pls_result_3, 
+Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3, 
                             input_table = input_table, 
                             threshold = 1, 
                             x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for livelihoods e-flows"))),
                             y_axis_name = "Model input variables")
 
+
+```
+
+```{r plot_pls, include = F}
+library(patchwork)
+      PLS_UNRES_baseline_crop_water_gap +
+      Fig_PLS_EFLOW_crop_water_gap +
+      Fig_PLS_SUPPL_dam_release_crop_water_gap +
+      plot_layout(ncol = 1, guides = "collect") + 
+    plot_annotation(title = expression(Downstream~river~flow~(m^3))) 
+
+  # plot_annotation(tag_levels = 'a') +
+# guides = "collect"
+
+ggsave("figures/Fig_7_sensitivity.png", width=7, height=10)
 
 ```
 
