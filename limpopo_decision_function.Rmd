@@ -661,34 +661,37 @@ Here we apply the aforementioned post-hoc analysis to the `mcSimulation()` outpu
 ```{r pls-crop_needs, echo=F}
 mcSimulation_pls<-plotting_simulations
 mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
-
-pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
-                  resultName = "yearly_crop_water_need", 
-                  ncomp = 1)
-
-input_table <- read.csv("data/limpopo_input_table.csv")
-
-Fig_14_PLS_crop_water_need <- plot_pls(pls_result_crop_water_need, 
-                            input_table = input_table, 
-                            threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for annual crop water needs"))),
-                            y_axis_name = "Model input variables")
-
-
-### Irrigation demand
-
-mcSimulation_pls<-plotting_simulations
-mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
-
-pls_result_irrig_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
-                  resultName = "yearly_irrigation_water_need", 
-                  ncomp = 1)
-
-Fig_15_PLS_irrigation_water_need <- plot_pls(pls_result_irrig_water_need, 
-                            input_table = input_table, 
-                            threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", 
-                                                          paste("score for annual irrigation water needs"))))
+# 
+# pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
+#                   resultName = "yearly_crop_water_need", 
+#                   ncomp = 1)
+# 
+# input_table <- read.csv("data/limpopo_input_table.csv")
+# 
+# Fig_14_PLS_crop_water_need <- plot_pls(pls_result_crop_water_need, 
+#                             input_table = input_table, 
+#                             threshold = 1) + 
+#   annotate(geom="text", x=1, y=10, 
+#            label=expression(atop("Water nees", 
+#                    paste("all e-flow scenarios")))) + 
+#           theme( axis.text.x = element_blank(),
+#           axis.ticks = element_blank())
+# 
+# 
+# ### Irrigation demand
+# 
+# mcSimulation_pls<-plotting_simulations
+# mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+# 
+# pls_result_irrig_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
+#                   resultName = "yearly_irrigation_water_need", 
+#                   ncomp = 1)
+# 
+# Fig_15_PLS_irrigation_water_need <- plot_pls(pls_result_irrig_water_need, 
+#                             input_table = input_table, 
+#                             threshold = 1, 
+#                             x_axis_name = expression(atop("Variable Importance in the Projection", 
+#                                                           paste("score for annual irrigation water needs"))))
 
 
 ### No e-flows
@@ -701,8 +704,12 @@ pls_result_1 <- plsr.mcSimulation(object = mcSimulation_pls,
 PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for crop water gap for UNRES – baseline, unrestricted water use scenario"))),
-                            y_axis_name = "Model input variables")
+                            x_axis_name) + 
+  annotate(geom="text", x=1, y=10, 
+           label=expression(atop("UNRES", 
+                   paste("unrestricted water use")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank())
 
 ### Environmental e-flows
 
@@ -718,7 +725,12 @@ pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
 Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for environmentnal e-flows"))))
+                            y_axis_name = "Model input variables") + 
+  annotate(geom="text", x=1, y=10, 
+           label=expression(atop("EFLOW", 
+                   paste("abstrction control")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank())
 
 ### SUPPL dam release - Livelihoods e-flows
 
@@ -732,8 +744,11 @@ pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
 Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", paste("score for livelihoods e-flows"))),
-                            y_axis_name = "Model input variables")
+                            x_axis_name = expression(atop("Variable Importance in the Projection", 
+                                                          paste("score for livelihoods e-flows"))))+ 
+  annotate(geom="text", x=1, y=10, 
+           label=expression(atop("SUPPL", 
+                   paste("dam releases")))) + 
 
 
 ```
