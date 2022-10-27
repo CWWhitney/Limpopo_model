@@ -1,16 +1,16 @@
-Modeling the contribution of eflows to sustainable agriculture, food
+Modeling the contribution of e-flows to sustainable agriculture, food
 security and livelihoods in South Africa’s Limpopo basin
 ================
 Eike Luedeling, Cory Whitney
 
-We generate a holistic model to simulate the contribution of eflows to
+We generate a holistic model to simulate the contribution of e-flows to
 sustainable agriculture, food security and livelihoods. Spatially, we do
 this for only a small portion of the basin as a test-case. We apply
 holistic modeling approaches to generate conceptual impact pathways and
 quantitative models to forecast decision outcomes (see Do, Luedeling,
 and Whitney 2020; Lanzanova et al. 2019; Cory Whitney et al. 2018). This
 includes collaborative model development (C. Whitney, Shepherd, and
-Luedeling 2018) to assess farming futures given eflow forecasts under
+Luedeling 2018) to assess farming futures given e-flow forecasts under
 different management options. To build these simulations we use
 functions from the `decisionSupport` (Luedeling et al. 2021), `dplyr`
 (Wickham, François, et al. 2022), `nasapower` (Sparks 2022), `patchwork`
@@ -92,7 +92,7 @@ distributions see the table at the end of this document.
 
 ![Model of the social effects of altered river flows on the
 sustainability of livelihoods in the Limpopo
-Basin](figures/Collective_Model.png)
+Basin](figures/Fig_2_Collective_Model.png)
 
 The decision model is coded as an R function which takes in the
 variables provided in the data table and generates a model output, such
@@ -115,21 +115,24 @@ our intervention comparison.
 
 The following function defines 3 scenarios:
 
-1.  No eflows: This is a scenario without eflows. Farmers extract water
-    according to their irrigation needs. Extractions are only limited by
-    the minimum water level that allows operating the pumps.
-2.  Restricted extraction: This is an eflow scenario, in which eflows
-    are interpreted in a purely ecological sense. Whenever eflows aren’t
-    achieved, water extraction is curtailed. There are no measures to
-    add water to the river in such events. We simulate Scenario 1 with
-    our own functions and some from the `nasapower` (Sparks 2022) and
-    `Evapotranspiration` (Guo, Westra, and Peterson 2022) packages.
-3.  Dam releases: This is an eflow scenario, in which eflows are
-    interpreted as encompassing the ecological as well as the
-    smallholder irrigation requirement. In case eflows aren’t naturally
-    met, water is released from upstream dams to ensure eflows.
-    Extraction by smallholder farmers is restricted only by the ability
-    to operate the pumps.
+1.  UNRES – baseline, unrestricted water use with no e-flows: This is a
+    scenario without eflows. Farmers extract water according to their
+    irrigation needs. Extractions are only limited by the minimum water
+    level that allows operating the pumps.
+2.  EFLOW – E-flow through abstraction control (without using dam
+    releases) with restricted extraction: This is an eflow scenario, in
+    which eflows are interpreted in a purely ecological sense. Whenever
+    eflows aren’t achieved, water extraction is curtailed. There are no
+    measures to add water to the river in such events. We simulate
+    Scenario 1 with our own functions and some from the `nasapower`
+    (Sparks 2022) and `Evapotranspiration` (Guo, Westra, and
+    Peterson 2022) packages.
+3.  SUPPL – E-flows achieved through abstraction control and dam
+    releases: This is an eflow scenario, in which eflows are interpreted
+    as encompassing the ecological as well as the smallholder irrigation
+    requirement. In case eflows aren’t naturally met, water is released
+    from upstream dams to ensure eflows. Extraction by smallholder
+    farmers is restricted only by the ability to operate the pumps.
 
 The following script contains the basic model we used to run the Monte
 Carlo.
@@ -176,9 +179,7 @@ livestock_water_needs<-vv(livestock_water_need,var_CV,12)
 river_flow<-pre_livestock_river_flow-livestock_water_needs
 
 # calculating the farmed area
-
 demand_for_farm_area<-n_subsistence_farmers*necessary_farm_size_per_household
-
 farmed_area<-min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
 
 total_cropwater_need<-cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
@@ -200,7 +201,6 @@ water_losses_share<-(1-efficiency_pumps*efficiency_irrig_scheduling)
 irrigation_water_need<-total_irrigation_need/(1-water_losses_share)
 
 # eflow Scenario 1 - no eflows
-
 scen1_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
 
 # eflow Scenario 2 - eflows as a limit to extraction only
@@ -316,14 +316,14 @@ data("constants")
 # use nasapower for evapotranspiration data
 ag_d <- get_power(
   community = "ag",
-  lonlat = c(31.08,-23.7),
+  lonlat = c(31.08,-23.7), #Letaba region
   pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
   dates = c("1981-01-01", "2020-12-31"),
   temporal_api = "daily"
 )
 
 # choose years of assessment
-years<-1981:2009
+years <- 1981:2009
 
 # name variables
 colnames(ag_d)[c(3:5, 8, 9, 10)] <-
@@ -446,6 +446,18 @@ mcSimulation_results <-
 write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 ```
 
+### Water needs
+
+### e-flows all scenarios flow plots
+
+### Anual gap for all e-flows scenarios
+
+## Dam releases
+
+## Downstream effect
+
+## Sensitivity analysis
+
 We use the `plsr.mcSimulation` function of the `decisionSupport` package
 to run Partial Least Squares regression on the model outputs. Projection
 to Latent Structures (PLS), also sometimes known as Partial Least
@@ -463,29 +475,6 @@ these procedures is contained in the [decisionSupport
 manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf),
 especially under `welfareDecisionAnalysis`.
 
-## Results
-
-### Water needs
-
-### “No eflows” scenario
-
-In the “No eflows” scenario, farmers currently face considerable periods
-of water shortages. On average across all months of the year, between 0
-and 80% of crop water needs could not be met by irrigation water
-extracted from the river.
-
-### Environmental e-flows scenario
-
-### “Livelihoods” e-flow scenario
-
-## Dam release
-
-## Downstream effect
-
-Here’s the impact on streamflow
-
-## Sensitivity analysis
-
 Here we apply the aforementioned post-hoc analysis to the
 `mcSimulation()` outputs with `plsr.mcSimulation()` to determine the VIP
 score and coefficients of our PLS regression models. This functions use
@@ -500,14 +489,6 @@ plot. The `plot_pls()` function uses the text in the `label` column as
 replacement for the default text in the `variable` column.
 
 ### Crop water needs
-
-### Irrigation demand
-
-### No eflows
-
-### Environmental e-flows
-
-### Livelihoods e-flows
 
 ### Estimate values
 
