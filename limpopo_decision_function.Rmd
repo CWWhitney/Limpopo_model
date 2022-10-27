@@ -79,7 +79,7 @@ For a full list of input variables with descriptions and the chosen distribution
 
 ### The `model_function`
 
-![Model of the social effects of altered river flows on the sustainability of livelihoods in the Limpopo Basin ](figures/Collective_Model.png)
+![Model of the social effects of altered river flows on the sustainability of livelihoods in the Limpopo Basin ](figures/Fig_2_Collective_Model.png)
 
 The decision model is coded as an R function which takes in the variables provided in the data table and generates a model output, such as the Net Present Value. 
 
@@ -150,9 +150,7 @@ livestock_water_needs<-vv(livestock_water_need,var_CV,12)
 river_flow<-pre_livestock_river_flow-livestock_water_needs
 
 # calculating the farmed area
-
 demand_for_farm_area<-n_subsistence_farmers*necessary_farm_size_per_household
-
 farmed_area<-min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
 
 total_cropwater_need<-cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
@@ -174,7 +172,6 @@ water_losses_share<-(1-efficiency_pumps*efficiency_irrig_scheduling)
 irrigation_water_need<-total_irrigation_need/(1-water_losses_share)
 
 # eflow Scenario 1 - no eflows
-
 scen1_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
 
 # eflow Scenario 2 - eflows as a limit to extraction only
@@ -279,14 +276,14 @@ data("constants")
 # use nasapower for evapotranspiration data
 ag_d <- get_power(
   community = "ag",
-  lonlat = c(31.08,-23.7),
+  lonlat = c(31.08,-23.7), #Letaba region
   pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
   dates = c("1981-01-01", "2020-12-31"),
   temporal_api = "daily"
 )
 
 # choose years of assessment
-years<-1981:2009
+years <- 1981:2009
 
 # name variables
 colnames(ag_d)[c(3:5, 8, 9, 10)] <-
@@ -393,15 +390,11 @@ mcSimulation_results <-
 write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 ```
 
-We use the `plsr.mcSimulation` function of the `decisionSupport` package to run Partial Least Squares regression on the model outputs. Projection to Latent Structures (PLS), also sometimes known as Partial Least Squares regression is a multivariate statistical technique that can deal with multiple colinear dependent and independent variables [@wold_pls-regression_2001]. It can be used as another means to assess the outcomes of a Monte Carlo model. We use the Variable Importance in the Projection (VIP) scores to identify important variables. VIP scores estimate the importance of each variable in the projection used in a PLS model. VIP is a parameter used for calculating the cumulative measure of the influence of individual variables on the model. Read more in ['A Simple Explanation of Partial Least Squares' by Kee Siong Ng](http://users.cecs.anu.edu.au/~kee/pls.pdf). More information on all these procedures is contained in the [decisionSupport manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf), especially under `welfareDecisionAnalysis`.  
-
 ### Water needs
-
-Here the general estimates about needed water for crops
 
 ```{r plot_water_needs, include = F}
 
-
+# Here the general estimates about needed water for crops
 plotting_simulations <- mcSimulation_results 
 
 Fig_total_annual_crop_water_irrigation_need <- 
@@ -516,10 +509,6 @@ Fig_monthly_baseline_crop_water_gap +
   monthly_crop_water_gap_environmental +
   monthly_crop_water_gap_suppl +
   plot_layout(ncol = 1, guides = "collect")  
-  #plot_annotation(title = "Monthly crop water gap for all e-flows scenarios")
-
-  # plot_annotation(tag_levels = 'a') +
-# guides = "collect"
 
 ggsave("figures/Fig_5_flows.png", width=7, height=10)
 
@@ -548,8 +537,6 @@ Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mc
                     ggplot2::labs(fill = "")  +
                      ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstrction control', 'SUPPL dam releases')) 
 
-# Here are the impacts of an environmentally focused e-flow policy on the crop water gap in each month.
-
 plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
 
 Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = plotting_simulations, 
@@ -563,6 +550,8 @@ Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_obje
 ```
 
 ```{r plot_eflow_results, include = F}
+# Here are the impacts of e-flow policy on the crop water gap in each month (livelihoods focused, environmentally focused)
+
 library(patchwork)
 
  Fig_eflow_policy_effect_crop_water_gap + 
@@ -574,7 +563,7 @@ ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
 
 ```
 
-Here are the impacts of an livelihoods focused e-flow policy on the crop water gap in each month.
+
 
 ## Dam releases
 
@@ -654,6 +643,8 @@ ggsave("figures/Fig_6_downstream.png", width=7, height=10)
 
 ## Sensitivity analysis
 
+We use the `plsr.mcSimulation` function of the `decisionSupport` package to run Partial Least Squares regression on the model outputs. Projection to Latent Structures (PLS), also sometimes known as Partial Least Squares regression is a multivariate statistical technique that can deal with multiple colinear dependent and independent variables [@wold_pls-regression_2001]. It can be used as another means to assess the outcomes of a Monte Carlo model. We use the Variable Importance in the Projection (VIP) scores to identify important variables. VIP scores estimate the importance of each variable in the projection used in a PLS model. VIP is a parameter used for calculating the cumulative measure of the influence of individual variables on the model. Read more in ['A Simple Explanation of Partial Least Squares' by Kee Siong Ng](http://users.cecs.anu.edu.au/~kee/pls.pdf). More information on all these procedures is contained in the [decisionSupport manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf), especially under `welfareDecisionAnalysis`.  
+
 Here we apply the aforementioned post-hoc analysis to the `mcSimulation()` outputs with `plsr.mcSimulation()` to determine the VIP score and coefficients of our PLS regression models. This functions use the outputs of the `mcSimulation()` selecting all the input variables from the decision analysis function in the parameter `object` and then runs a PLS regression with an outcome variable defined in the parameter `resultName`. We also need to import the input table again to replace the labels for the variables on the y-axis. The input table can include a `label` and `variable` column. The standard labels (from the `variable` column) are usually computer readable and not very nice for a plot. The `plot_pls()` function uses the text in the `label` column as replacement for the default text in the `variable` column.  
 
 ### Crop water needs 
@@ -662,35 +653,35 @@ Here we apply the aforementioned post-hoc analysis to the `mcSimulation()` outpu
 mcSimulation_pls<-plotting_simulations
 mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 # 
-# pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
-#                   resultName = "yearly_crop_water_need", 
-#                   ncomp = 1)
-# 
-# input_table <- read.csv("data/limpopo_input_table.csv")
-# 
-# Fig_14_PLS_crop_water_need <- plot_pls(pls_result_crop_water_need, 
-#                             input_table = input_table, 
-#                             threshold = 1) + 
-#   annotate(geom="text", x=1, y=10, 
-#            label=expression(atop("Water nees", 
-#                    paste("all e-flow scenarios")))) + 
+pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
+                  resultName = "yearly_crop_water_need",
+                  ncomp = 1)
+
+input_table <- read.csv("data/limpopo_input_table.csv")
+
+# Fig_14_PLS_crop_water_need <- plot_pls(pls_result_crop_water_need,
+#                             input_table = input_table,
+#                             threshold = 1) +
+#   annotate(geom="text", x=1, y=10,
+#            label=expression(atop("Water needs",
+#                    paste("all e-flow scenarios")))) +
 #           theme( axis.text.x = element_blank(),
 #           axis.ticks = element_blank())
-# 
+
 # 
 # ### Irrigation demand
 # 
-# mcSimulation_pls<-plotting_simulations
-# mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+mcSimulation_pls<-plotting_simulations
+mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 # 
 # pls_result_irrig_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
-#                   resultName = "yearly_irrigation_water_need", 
+#                   resultName = "yearly_irrigation_water_need",
 #                   ncomp = 1)
 # 
-# Fig_15_PLS_irrigation_water_need <- plot_pls(pls_result_irrig_water_need, 
-#                             input_table = input_table, 
-#                             threshold = 1, 
-#                             x_axis_name = expression(atop("Variable Importance in the Projection", 
+# Fig_15_PLS_irrigation_water_need <- plot_pls(pls_result_irrig_water_need,
+#                             input_table = input_table,
+#                             threshold = 1,
+#                             x_axis_name = expression(atop("Variable Importance in the Projection",
 #                                                           paste("score for annual irrigation water needs"))))
 
 
@@ -703,16 +694,15 @@ pls_result_1 <- plsr.mcSimulation(object = mcSimulation_pls,
 
 PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1, 
                             input_table = input_table, 
-                            threshold = 1, 
-                            x_axis_name) + 
-  annotate(geom="text", x=1, y=10, 
-           label=expression(atop("UNRES", 
-                   paste("unrestricted water use")))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank())
+                            threshold = 1) + 
+  annotate(geom="text", x=1.7, y=3,
+           label=expression(atop("UNRES",
+                   paste("unrestricted water use")))) +
+          theme(axis.text.x = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank())
 
 ### Environmental e-flows
-
 
 mcSimulation_pls <- plotting_simulations
 mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
@@ -721,16 +711,16 @@ pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "scen2_crop_water_gap", 
                   ncomp = 1)
 
-
 Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2, 
                             input_table = input_table, 
                             threshold = 1, 
                             y_axis_name = "Model input variables") + 
-  annotate(geom="text", x=1, y=10, 
+  annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("EFLOW", 
                    paste("abstrction control")))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank())
+          theme(axis.text.x = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank())
 
 ### SUPPL dam release - Livelihoods e-flows
 
@@ -744,12 +734,10 @@ pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
 Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = expression(atop("Variable Importance in the Projection", 
-                                                          paste("score for livelihoods e-flows"))))+ 
-  annotate(geom="text", x=1, y=10, 
+                            x_axis_name = "VIP")+ 
+  annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("SUPPL", 
-                   paste("dam releases")))) + 
-
+                   paste("dam releases"))))  
 
 ```
 
@@ -759,7 +747,8 @@ library(patchwork)
       Fig_PLS_EFLOW_crop_water_gap +
       Fig_PLS_SUPPL_dam_release_crop_water_gap +
       plot_layout(ncol = 1, guides = "collect") + 
-    plot_annotation(title = expression(Downstream~river~flow~(m^3))) 
+    plot_annotation(title = "Variable Importance in the Projection (VIP)") &     
+                    ggplot2::theme(legend.position="bottom") 
 
   # plot_annotation(tag_levels = 'a') +
 # guides = "collect"
@@ -774,7 +763,6 @@ ggsave("figures/Fig_7_sensitivity.png", width=7, height=10)
 input_table <- read.csv("data/limpopo_input_table.csv")
 kable(input_table, caption = 'This table contains the estimate values used for the Monte Carlo analysis') 
 ```
-
 
 This document was generated using the `rmarkdown` [@R-rmarkdown] and `knitr` [@R-knitr] packages in the R programming language [@R-base].
 
