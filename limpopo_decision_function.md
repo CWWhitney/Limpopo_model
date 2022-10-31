@@ -446,16 +446,6 @@ mcSimulation_results <-
 write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 ```
 
-### Water needs
-
-### e-flows all scenarios flow plots
-
-### Anual gap for all e-flows scenarios
-
-## Dam releases
-
-## Downstream effect
-
 ## Sensitivity analysis
 
 We use the `plsr.mcSimulation` function of the `decisionSupport` package
@@ -475,12 +465,12 @@ these procedures is contained in the [decisionSupport
 manual](https://cran.r-project.org/web/packages/decisionSupport/decisionSupport.pdf),
 especially under `welfareDecisionAnalysis`.
 
-Here we apply the aforementioned post-hoc analysis to the
-`mcSimulation()` outputs with `plsr.mcSimulation()` to determine the VIP
-score and coefficients of our PLS regression models. This functions use
-the outputs of the `mcSimulation()` selecting all the input variables
-from the decision analysis function in the parameter `object` and then
-runs a PLS regression with an outcome variable defined in the parameter
+We apply the aforementioned post-hoc analysis to the `mcSimulation()`
+outputs with `plsr.mcSimulation()` to determine the VIP score and
+coefficients of our PLS regression models. This functions use the
+outputs of the `mcSimulation()` selecting all the input variables from
+the decision analysis function in the parameter `object` and then runs a
+PLS regression with an outcome variable defined in the parameter
 `resultName`. We also need to import the input table again to replace
 the labels for the variables on the y-axis. The input table can include
 a `label` and `variable` column. The standard labels (from the
@@ -488,7 +478,75 @@ a `label` and `variable` column. The standard labels (from the
 plot. The `plot_pls()` function uses the text in the `label` column as
 replacement for the default text in the `variable` column.
 
-### Crop water needs
+``` r
+mcSimulation_pls<-plotting_simulations
+mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+# 
+pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
+                  resultName = "yearly_crop_water_need",
+                  ncomp = 1)
+
+input_table <- read.csv("data/limpopo_input_table.csv")
+
+# ### Irrigation demand
+# 
+mcSimulation_pls<-plotting_simulations
+mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+# 
+
+### No e-flows
+
+pls_result_1 <- plsr.mcSimulation(object = mcSimulation_pls,
+                  resultName = "scen1_crop_water_gap", 
+                  ncomp = 1)
+
+PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1, 
+                            input_table = input_table, 
+                            threshold = 1) + 
+  annotate(geom="text", x=1.7, y=3,
+           label=expression(atop("UNRES",
+                   paste("unrestricted water use")))) +
+          theme(axis.text.x = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank())
+
+### Environmental e-flows
+
+mcSimulation_pls <- plotting_simulations
+mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+
+pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
+                  resultName = "scen2_crop_water_gap", 
+                  ncomp = 1)
+
+Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2, 
+                            input_table = input_table, 
+                            threshold = 1, 
+                            y_axis_name = "Model input variables") + 
+  annotate(geom="text", x=1.7, y=3, 
+           label=expression(atop("EFLOW", 
+                   paste("abstraction control")))) + 
+          theme(axis.text.x = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title.x = element_blank())
+
+### SUPPL dam release - Livelihoods e-flows
+
+mcSimulation_pls <- plotting_simulations
+mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+
+pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
+                  resultName = "scen3_total_dam_release", 
+                  ncomp = 1)
+
+Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3, 
+                            input_table = input_table, 
+                            threshold = 1, 
+                            x_axis_name = "VIP")+ 
+  annotate(geom="text", x=1.7, y=3, 
+           label=expression(atop("SUPPL", 
+                   paste("dam releases"))))  
+```
 
 ### Estimate values
 

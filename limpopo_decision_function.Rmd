@@ -435,10 +435,6 @@ Fig_total_annual_crop_water_irrigation_need +
 ggsave("figures/Fig_3_water_needs.png", width=10, height=5)
 
 
-```
-
-
-```{r gap_no_eflow-dist, include = F}
 
 # The crop water gap varies across the months of the year, with greatest irrigation water shortfalls during the dry-season months.
 
@@ -488,9 +484,7 @@ monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = plotting_sim
             label=(expression(atop("% change SUPPL", 
                                    paste("dam releases")))))
 
-```
 
-```{r plot_no_eflow_results, include = F}
 library(patchwork)
 
 Fig_monthly_baseline_crop_water_gap +
@@ -522,7 +516,7 @@ Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mc
                                     base_size = 13) + 
                     ggplot2::theme_classic() + 
                     ggplot2::labs(fill = "")  +
-                     ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstrction control', 'SUPPL dam releases')) 
+                     ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
 
 plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- plotting_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
 
@@ -534,9 +528,6 @@ Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_obje
   labs(y = expression("Crop water gap change (%)"))
 
 
-```
-
-```{r plot_eflow_results, include = F}
 # Here are the impacts of e-flow policy on the crop water gap in each month (livelihoods focused, environmentally focused)
 
 library(patchwork)
@@ -552,12 +543,19 @@ ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
 
 
 ```{r dam_release, include = F}
-Fig_12_required_dam_release <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+Fig_7_required_dam_release <- plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "scen3_dam_release",
               y_axis_name = "a",
               x_axis_name = "Month", 
               facet_labels = "") + 
   labs(y = expression(atop(Required~water~release, paste(from~upstream~dams~(m^3)))))
+
+library(patchwork)
+
+  Fig_7_required_dam_release +
+  plot_layout(ncol = 1, guides = "collect")  
+  
+ggsave("figures/Fig_7_dam_release.png", width=7, height=7)
 
 ```
 
@@ -565,7 +563,7 @@ Fig_12_required_dam_release <- plot_cashflow(mcSimulation_object = plotting_simu
 ```{r stream-flow, include = F}
 
 # Here's the impact on stream flow 
-
+#('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
 #Downstream river flows also vary throughout the year under the no e-flows scenario.
 
 Fig_monthly_downstream_river_flow <-
@@ -590,7 +588,7 @@ Fig_monthly_change_in_downstream_river_flow_env_eflows <-
               facet_labels = "") +  
   annotate(geom="text", x=9, y= 250000, 
             label=(expression(atop("EFLOW", 
-                                   paste("abstrction control"))))) + 
+                                   paste("abstraction control"))))) + 
           theme( axis.text.x = element_blank(),
           axis.ticks = element_blank()) + 
   labs(y = expression(Downstream~river~flow~(m^3)))
@@ -605,11 +603,8 @@ Fig_monthly_change_in_downstream_river_flow_live_eflows <-
             label=(expression(atop("SUPPL", 
                                    paste("dam releases")))))
 
-#('UNRES (unrestricted) baseline', 'EFLOW abstrction control', 'SUPPL dam releases')) 
 
-```
 
-```{r plot_downstream_flow, include = F}
 library(patchwork)
 
   Fig_monthly_downstream_river_flow + 
@@ -679,7 +674,7 @@ Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2,
                             y_axis_name = "Model input variables") + 
   annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("EFLOW", 
-                   paste("abstrction control")))) + 
+                   paste("abstraction control")))) + 
           theme(axis.text.x = element_blank(),
           axis.ticks = element_blank(),
           axis.title.x = element_blank())
@@ -713,7 +708,7 @@ library(patchwork)
                     ggplot2::theme(legend.position="bottom") 
 
 
-ggsave("figures/Fig_7_sensitivity.png", width=7, height=10)
+ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
 
 ```
 
