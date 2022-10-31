@@ -436,10 +436,6 @@ ggsave("figures/Fig_3_water_needs.png", width=10, height=5)
 
 
 
-# The crop water gap varies across the months of the year, with greatest irrigation water shortfalls during the dry-season months.
-
-# In the "No eflows" scenario, farmers currently face considerable periods of water shortages. On average across all months of the year, between 0 and 80% of crop water needs could not be met by irrigation water extracted from the river.
-
 
 plotting_simulations <- mcSimulation_results 
 
@@ -555,7 +551,7 @@ library(patchwork)
   Fig_7_required_dam_release +
   plot_layout(ncol = 1, guides = "collect")  
   
-ggsave("figures/Fig_7_dam_release.png", width=7, height=7)
+ggsave("figures/Fig_7_dam_release.png", width=7, height=5)
 
 ```
 
