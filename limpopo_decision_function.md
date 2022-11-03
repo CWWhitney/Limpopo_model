@@ -88,11 +88,36 @@ distributions:
 For a full list of input variables with descriptions and the chosen
 distributions see the table at the end of this document.
 
-### The `model_function`
+### Scenarios
+
+The following function defines 3 scenarios:
+
+1.  UNRES – baseline, unrestricted water use with no e-flows: This is a
+    scenario without eflows. Farmers extract water according to their
+    irrigation needs. Extractions are only limited by the minimum water
+    level that allows operating the pumps.
+2.  EFLOW – E-flow through abstraction control (without using dam
+    releases) with restricted extraction: This is an eflow scenario, in
+    which eflows are interpreted in a purely ecological sense. Whenever
+    eflows aren’t achieved, water extraction is curtailed. There are no
+    measures to add water to the river in such events. We simulate this
+    scenario with our own functions and some from the `nasapower`
+    (Sparks 2022) and `Evapotranspiration` (Guo, Westra, and
+    Peterson 2022) packages.
+3.  SUPPL – E-flows achieved through abstraction control and dam
+    releases: This is an eflow scenario, in which eflows are interpreted
+    as encompassing the ecological as well as the smallholder irrigation
+    requirement. In case eflows aren’t naturally met, water is released
+    from upstream dams to ensure eflows. Extraction by smallholder
+    farmers is restricted only by the ability to operate the pumps.
+
+### The conceptual model
 
 ![Model of the social effects of altered river flows on the
 sustainability of livelihoods in the Limpopo
 Basin](figures/Fig_2_Collective_Model.png)
+
+### The `model_function`
 
 The decision model is coded as an R function which takes in the
 variables provided in the data table and generates a model output, such
@@ -110,29 +135,6 @@ with variation from a pre-defined mean and coefficient of variation,
 `chance_event()` to simulate whether events occur and `discount()` to
 discount values along a time series and generate a Net Present Value for
 our intervention comparison.
-
-### Scenarios
-
-The following function defines 3 scenarios:
-
-1.  UNRES – baseline, unrestricted water use with no e-flows: This is a
-    scenario without eflows. Farmers extract water according to their
-    irrigation needs. Extractions are only limited by the minimum water
-    level that allows operating the pumps.
-2.  EFLOW – E-flow through abstraction control (without using dam
-    releases) with restricted extraction: This is an eflow scenario, in
-    which eflows are interpreted in a purely ecological sense. Whenever
-    eflows aren’t achieved, water extraction is curtailed. There are no
-    measures to add water to the river in such events. We simulate
-    Scenario 1 with our own functions and some from the `nasapower`
-    (Sparks 2022) and `Evapotranspiration` (Guo, Westra, and
-    Peterson 2022) packages.
-3.  SUPPL – E-flows achieved through abstraction control and dam
-    releases: This is an eflow scenario, in which eflows are interpreted
-    as encompassing the ecological as well as the smallholder irrigation
-    requirement. In case eflows aren’t naturally met, water is released
-    from upstream dams to ensure eflows. Extraction by smallholder
-    farmers is restricted only by the ability to operate the pumps.
 
 The following script contains the basic model we used to run the Monte
 Carlo.
@@ -152,7 +154,7 @@ effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 # Computed based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package)
 # Input temperature data comes from the NASAPOWER dataset 
 # (accessed through the nasapower package) 
-# The scenario data will be based on scenarios that represent conditions 
+# The scenario data are based on scenarios that represent conditions 
 # during real years in the past
 # To get from ET0 to crop water use, we need to multiply ET0 with a crop
 # coefficient (kc), which is estimated for each month
@@ -289,7 +291,7 @@ return(list(cropwater_need=total_cropwater_need,
 }
 ```
 
-#### Perform a Monte Carlo simulation with scenarios
+### Perform the Monte Carlo simulation with scenarios
 
 Using the model function above, we can perform a Monte Carlo simulation
 with the `mcSimulation()` function from `decisionSupport`. This function
@@ -548,7 +550,7 @@ Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3,
                    paste("dam releases"))))  
 ```
 
-### Estimate values
+## Estimate values
 
 | Description                                                                                                                                               | variable                          | distribution |       lower |       upper | label                                |
 |:----------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------|:-------------|------------:|------------:|:-------------------------------------|
@@ -640,7 +642,7 @@ This document was generated using the `rmarkdown` (Allaire et al. 2022)
 and `knitr` (Xie 2022) packages in the R programming language (R Core
 Team 2022).
 
-### References
+## References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
 

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
   dpi=300
 )
 
-#The set.seed() function in R is used to create reproducible results when writing code that involves creating variables that take on random values. By using the set. seed() function, you guarantee that the same random values are produced each time you run the code
+#The set.seed() function in R is used to create reproducible results when writing code that involves creating variables that take on random values. By using the set. seed() function, we guarantee that the same random values are produced each time we run the code
 
 set.seed(424242)
 
@@ -77,23 +77,25 @@ To support the model building process we design an input table to store the `est
 
 For a full list of input variables with descriptions and the chosen distributions see the table at the end of this document. 
 
-### The `model_function`
+### Scenarios
+
+The following function defines 3 scenarios:
+
+1. UNRES – baseline, unrestricted water use with no e-flows: This is a scenario without eflows. Farmers extract water according to their irrigation needs. Extractions are only limited by the minimum water level that allows operating the pumps.
+1. EFLOW – E-flow through abstraction control (without using dam releases) with restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events. We simulate this scenario with our own functions and some from the `nasapower` [@R-nasapower] and `Evapotranspiration` [@R-Evapotranspiration] packages.
+1. SUPPL – E-flows achieved through abstraction control and dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
+
+### The conceptual model
 
 ![Model of the social effects of altered river flows on the sustainability of livelihoods in the Limpopo Basin ](figures/Fig_2_Collective_Model.png)
+
+### The `model_function`
 
 The decision model is coded as an R function which takes in the variables provided in the data table and generates a model output, such as the Net Present Value. 
 
 In the following we use of various decisionSupport functions, which use the `tidyverse` libraries [@tidyverse2019] including `ggplot2` [@R-ggplot2], `plyr` [@R-plyr] and `dplyr` [@R-dplyr] among others in the [R programming language](https://www.r-project.org/) [@R-base]. 
 
 Here we generate a model as a function using `decisionSupport` library we use the `decisionSupport` functions `vv()` to produce time series with variation from a pre-defined mean and coefficient of variation, `chance_event()` to simulate whether events occur and `discount()` to discount values along a time series and generate a Net Present Value for our intervention comparison.
-
-### Scenarios
-
-The following function defines 3 scenarios:
-
-1. UNRES – baseline, unrestricted water use with no e-flows: This is a scenario without eflows. Farmers extract water according to their irrigation needs. Extractions are only limited by the minimum water level that allows operating the pumps.
-1. EFLOW – E-flow through abstraction control (without using dam releases) with restricted extraction: This is an eflow scenario, in which eflows are interpreted in a purely ecological sense. Whenever eflows aren't achieved, water extraction is curtailed. There are no measures to add water to the river in such events. We simulate Scenario 1 with our own functions and some from the `nasapower` [@R-nasapower] and `Evapotranspiration` [@R-Evapotranspiration] packages.
-1. SUPPL – E-flows achieved through abstraction control and dam releases: This is an eflow scenario, in which eflows are interpreted as encompassing the ecological as well as the smallholder irrigation requirement. In case eflows aren't naturally met, water is released from upstream dams to ensure eflows. Extraction by smallholder farmers is restricted only by the ability to operate the pumps.
 
 
 ```{r make_variables, include=F}
@@ -123,7 +125,7 @@ effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 # Computed based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package)
 # Input temperature data comes from the NASAPOWER dataset 
 # (accessed through the nasapower package) 
-# The scenario data will be based on scenarios that represent conditions 
+# The scenario data are based on scenarios that represent conditions 
 # during real years in the past
 # To get from ET0 to crop water use, we need to multiply ET0 with a crop
 # coefficient (kc), which is estimated for each month
@@ -261,7 +263,7 @@ return(list(cropwater_need=total_cropwater_need,
 
 ```
 
-#### Perform a Monte Carlo simulation with scenarios 
+### Perform the Monte Carlo simulation with scenarios 
 
 Using the model function above, we can perform a Monte Carlo simulation with the `mcSimulation()` function from `decisionSupport`. This function generates distributions of all variables in the input table as well as the specified model outputs (see `return()` function above) by calculating random draws in our defined `limpopo_decision_function()`. We run a  visual assessment to ensure that all the variables in the input table are included in the model (erroneous variables listed there can cause issues with some of the post-hoc analyses). 
 
@@ -708,7 +710,7 @@ ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
 
 ```
 
-### Estimate values
+## Estimate values
  
 ```{r estimate_table, echo=F}
 input_table <- read.csv("data/limpopo_input_table.csv")
@@ -717,5 +719,5 @@ kable(input_table, caption = 'This table contains the estimate values used for t
 
 This document was generated using the `rmarkdown` [@R-rmarkdown] and `knitr` [@R-knitr] packages in the R programming language [@R-base].
 
-### References
+## References
 
