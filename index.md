@@ -481,9 +481,12 @@ plot. The `plot_pls()` function uses the text in the `label` column as
 replacement for the default text in the `variable` column.
 
 ``` r
+# to ensure a clear process (not overwriting the original data) 
+# rename the simulations results
 mcSimulation_pls<-plotting_simulations
-mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
-# 
+# select the data for the scenario analysis 
+mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
+
 pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "yearly_crop_water_need",
                   ncomp = 1)
@@ -491,10 +494,6 @@ pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
 input_table <- read.csv("data/limpopo_input_table.csv")
 
 # ### Irrigation demand
-# 
-mcSimulation_pls<-plotting_simulations
-mcSimulation_pls$x<-mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
-# 
 
 ### No e-flows
 
@@ -514,9 +513,6 @@ PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1,
 
 ### Environmental e-flows
 
-mcSimulation_pls <- plotting_simulations
-mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
-
 pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "scen2_crop_water_gap", 
                   ncomp = 1)
@@ -533,9 +529,6 @@ Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2,
           axis.title.x = element_blank())
 
 ### SUPPL dam release - Livelihoods e-flows
-
-mcSimulation_pls <- plotting_simulations
-mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 
 pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
                   resultName = "scen3_total_dam_release", 
