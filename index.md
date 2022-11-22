@@ -12,7 +12,7 @@ and Whitney 2020; Lanzanova et al. 2019; Cory Whitney et al. 2018). This
 includes collaborative model development (C. Whitney, Shepherd, and
 Luedeling 2018) to assess farming futures given e-flow forecasts under
 different management options. To build these simulations we use
-functions from the `decisionSupport` (Luedeling et al. 2021), `dplyr`
+functions from the `decisionSupport` (Luedeling et al. 2022), `dplyr`
 (Wickham, François, et al. 2022), `nasapower` (Sparks 2022), `patchwork`
 (Pedersen 2020), `tidyverse` (Wickham 2021) and `Evapotranspiration`
 (Guo, Westra, and Peterson 2022) libraries in the R programming language
@@ -45,7 +45,7 @@ identified as carrying decision-relevant uncertainty can then be
 targeted by decision-supporting research.
 
 The `mcSimulation` function from the `decisionSupport` package can be
-applied to conduct decision analysis (Luedeling et al. 2021). The
+applied to conduct decision analysis (Luedeling et al. 2022). The
 function requires three inputs:
 
 1.  an `estimate` of the joint probability distribution of the input
@@ -428,7 +428,7 @@ write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
 ```
 
 Here we run the model with the `scenario_mc` function from the
-`decisionSupport` package (Luedeling et al. 2021). The function
+`decisionSupport` package (Luedeling et al. 2022). The function
 essentially generates a Monte Carlo model with data from existing
 scenarios for some of the model inputs.
 
@@ -446,6 +446,284 @@ mcSimulation_results <-
 
 #save this someplace to share
 write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
+```
+
+# Results
+
+### Water needs
+
+``` r
+# Here the general estimates about needed water for crops
+plotting_simulations <- mcSimulation_results 
+
+Fig_total_annual_crop_water_irrigation_need <- 
+        decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
+                                    vars = c("yearly_crop_water_need",
+                                             "yearly_irrigation_water_need"),
+                                    method = 'smooth_simple_overlay',
+                                    x_axis_name = "",
+                                    y_axis_name = "Distribution density",
+                                    base_size = 13)  + 
+                    ggplot2::theme_classic() + 
+                    ggplot2::labs(x = expression(Total~annual~water~need~(m^3))) + 
+                    ggplot2::labs(fill = "") +
+                    ggplot2::scale_fill_discrete(labels=c('Crops', 'Irrigation')) +     
+                    ggplot2::theme(legend.position="bottom") 
+#> Scale for 'fill' is already present. Adding another scale for 'fill', which
+#> will replace the existing scale.
+
+Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plotting_simulations, 
+              cashflow_var_name = "irrigation_water_need",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  labs(y = expression(Monthly~irrigation~water~need~(m^3)))
+```
+
+### Baseline vs scenarios results
+
+``` r
+library(patchwork)
+
+Fig_total_annual_crop_water_irrigation_need +
+  inset_element(Fig_monthly_irrigation_water_need, 
+                  left = 0.29, 
+                  bottom = 0.29, 
+                  right = 0.97, 
+                  top = 0.97) + 
+  plot_annotation(title = "Annual crop water need")
+```
+
+![](index_files/figure-gfm/plot_baseline_results-1.png)<!-- -->
+
+``` r
+
+ggsave("figures/Fig_3_water_needs.png", width=10, height=5)
+
+
+gap1_simulations <- mcSimulation_results 
+
+gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)] <- gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]*100
+
+Fig_monthly_baseline_crop_water_gap <- 
+  plot_cashflow(mcSimulation_object = gap1_simulations, 
+              cashflow_var_name = "Crop_water_gap_scen1_",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") + 
+            labs(y = expression("")) + 
+  annotate(geom="text", x=3, y=93, 
+           label=expression(atop("Total gap (%) UNRES", 
+                   paste("unrestricted water use")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank())
+
+
+gap2_1_simulations <- mcSimulation_results 
+
+gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+
+monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2_1_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") + 
+  annotate(geom="text", x=3, y=77, 
+           label=expression(atop("% change EFLOW", 
+                                 paste("abstraction control")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank()) + 
+  labs(y = "Monthly crop water gap for all e-flows scenarios")
+
+gap3_1_simulations <- mcSimulation_results
+
+gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
+
+monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = gap3_1_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  annotate(geom="text", x=3, y= -80, 
+            label=(expression(atop("% change SUPPL", 
+                                   paste("dam releases")))))
+
+
+library(patchwork)
+
+Fig_monthly_baseline_crop_water_gap +
+  monthly_crop_water_gap_environmental +
+  monthly_crop_water_gap_suppl +
+  plot_layout(ncol = 1, guides = "collect")  
+#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
+#> 'expression'
+
+#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
+#> 'expression'
+
+#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
+#> 'expression'
+```
+
+![](index_files/figure-gfm/plot_baseline_results-2.png)<!-- -->
+
+``` r
+ggsave("figures/Fig_5_flows.png", width=7, height=10)
+#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
+#> 'expression'
+
+#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
+#> 'expression'
+
+#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
+#> 'expression'
+```
+
+### Change in crop water gap
+
+``` r
+# Here the distribution of the changes in the crop water gap through e-flows.
+
+eflow_simulations <- mcSimulation_results
+
+eflow_simulations$y$scen1_crop_water_gap <- eflow_simulations$y$scen1_crop_water_gap*100
+
+eflow_simulations$y$Mean_Crop_water_gap_difference_2_vs_1 <- eflow_simulations$y$Mean_Crop_water_gap_difference_2_vs_1*100
+
+eflow_simulations$y$Mean_Crop_water_gap_difference_3_vs_1 <- eflow_simulations$y$Mean_Crop_water_gap_difference_3_vs_1*100
+
+Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = eflow_simulations,
+                                    vars = c("scen1_crop_water_gap",
+                                             "Mean_Crop_water_gap_difference_2_vs_1", 
+                                             "Mean_Crop_water_gap_difference_3_vs_1"),
+                                    method = 'smooth_simple_overlay',
+                                    x_axis_name = expression("Annual crop water gap % of needed irrigation water"),
+                                    y_axis_name = "Distribution density",
+                                    base_size = 13) + 
+                    ggplot2::theme_classic() + 
+                    ggplot2::labs(fill = "")  +
+                     ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
+#> Scale for 'fill' is already present. Adding another scale for 'fill', which
+#> will replace the existing scale.
+
+eflow2_1_simulations <- mcSimulation_results
+
+eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+
+Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = eflow2_1_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  labs(y = expression("Crop water gap change (%)"))
+
+
+# Here are the impacts of e-flow policy on the crop water gap in each month (livelihoods focused, environmentally focused)
+
+library(patchwork)
+
+ Fig_eflow_policy_effect_crop_water_gap + 
+   plot_layout(guides = "collect") + 
+   plot_annotation(title = "Crop water gap for all e-flows scenarios") &     
+                    ggplot2::theme(legend.position="bottom") 
+```
+
+![](index_files/figure-gfm/plot_eflows_gap_change-1.png)<!-- -->
+
+``` r
+ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
+```
+
+### Dam releases
+
+``` r
+releases_simulations <- mcSimulation_results
+
+Fig_7_required_dam_release <- plot_cashflow(mcSimulation_object = releases_simulations, 
+              cashflow_var_name = "scen3_dam_release",
+              y_axis_name = "a",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  labs(y = expression(atop(Required~water~release, paste(from~upstream~dams~(m^3)))))
+
+library(patchwork)
+
+  Fig_7_required_dam_release +
+  plot_layout(ncol = 1, guides = "collect")  
+```
+
+![](index_files/figure-gfm/dam_release-1.png)<!-- -->
+
+``` r
+  
+ggsave("figures/Fig_7_dam_release.png", width=7, height=5)
+```
+
+### Stream flow
+
+``` r
+# Here's the impact on stream flow 
+#('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
+#Downstream river flows also vary throughout the year under the no e-flows scenario.
+
+flow_simulations <- mcSimulation_results
+
+Fig_monthly_downstream_river_flow <-
+  plot_cashflow(mcSimulation_object = flow_simulations, 
+              cashflow_var_name = "Downstream_river_flow_1_",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") + 
+  annotate(geom="text", x=9, y= 200000000, 
+            label=(expression(atop("UNRES", 
+                                   paste("(unrestricted) baseline"))))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank())
+
+# Here's the impact on stream flow Downstream_difference_2_vs_1:
+
+Fig_monthly_change_in_downstream_river_flow_env_eflows <-
+  plot_cashflow(mcSimulation_object = flow_simulations, 
+              cashflow_var_name = "Downstream_difference_2_vs_1",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") +  
+  annotate(geom="text", x=9, y= 250000, 
+            label=(expression(atop("EFLOW", 
+                                   paste("abstraction control"))))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank()) + 
+  labs(y = expression(Downstream~river~flow~(m^3)))
+
+Fig_monthly_change_in_downstream_river_flow_live_eflows <-
+  plot_cashflow(mcSimulation_object = flow_simulations, 
+              cashflow_var_name = "Downstream_difference_3_vs_1",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  annotate(geom="text", x=9, y= 400000, 
+            label=(expression(atop("SUPPL", 
+                                   paste("dam releases")))))
+
+
+
+library(patchwork)
+
+  Fig_monthly_downstream_river_flow + 
+  Fig_monthly_change_in_downstream_river_flow_env_eflows +
+    Fig_monthly_change_in_downstream_river_flow_live_eflows +
+  plot_layout(ncol = 1, guides = "collect")  
+```
+
+![](index_files/figure-gfm/stream-flow-1.png)<!-- -->
+
+``` r
+    # plot_annotation(title = expression(Downstream~river~flow~(m^3))) 
+
+  # plot_annotation(tag_levels = 'a') +
+# guides = "collect"
+
+ggsave("figures/Fig_6_downstream.png", width=7, height=10)
 ```
 
 ## Sensitivity analysis
@@ -483,7 +761,7 @@ replacement for the default text in the `variable` column.
 ``` r
 # to ensure a clear process (not overwriting the original data) 
 # rename the simulations results
-mcSimulation_pls<-plotting_simulations
+mcSimulation_pls <- mcSimulation_results
 # select the data for the scenario analysis 
 mcSimulation_pls$x <- mcSimulation_pls$x[, !names(mcSimulation_pls$x) == "Scenario"]
 
@@ -514,7 +792,8 @@ PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1,
 ### Environmental e-flows
 
 pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
-                  resultName = "scen2_crop_water_gap", 
+                  #  resultName = "Crop_water_gap_difference_2_vs_1",
+                   resultName = "scen2_crop_water_gap", 
                   ncomp = 1)
 
 Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2, 
@@ -531,7 +810,8 @@ Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2,
 ### SUPPL dam release - Livelihoods e-flows
 
 pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
-                  resultName = "scen3_total_dam_release", 
+                  #  resultName = "Crop_water_gap_difference_3_vs_1",  
+                   resultName = "scen3_total_dam_release", 
                   ncomp = 1)
 
 Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3, 
@@ -541,6 +821,93 @@ Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3,
   annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("SUPPL", 
                    paste("dam releases"))))  
+
+
+library(patchwork)
+      PLS_UNRES_baseline_crop_water_gap +
+      Fig_PLS_EFLOW_crop_water_gap +
+      Fig_PLS_SUPPL_dam_release_crop_water_gap +
+      plot_layout(ncol = 1, guides = "collect") + 
+    plot_annotation(title = "Variable Importance in the Projection (VIP)") &     
+                    ggplot2::theme(legend.position="bottom") 
+```
+
+![](index_files/figure-gfm/pls-crop_needs-1.png)<!-- -->
+
+``` r
+
+ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
+```
+
+## Expected Value of Perfect Information
+
+Here we calculate the Expected Value of Perfect Information (EVPI) using
+the `multi_EVPI` function in the `decisionSupport` package. The results
+show that there would be little additional value int eh knowledge gained
+by gathering further knowledge on any ofthe variables that were included
+in the analysis.
+
+``` r
+# to ensure a clear process (not overwriting the original data) 
+# rename the simulations results
+simulations_evpi_data <- mcSimulation_results
+
+#here we subset the outputs from the mcSimulation function (y) by selecting the comparative mean crop water gap variables
+simulations_evpi_data_table <- data.frame(simulations_evpi_data$x[1:71], simulations_evpi_data$y[118:119])
+
+# Run evpi
+
+results_evpi <- multi_EVPI(mc = simulations_evpi_data_table, 
+                          first_out_var = "Mean_Crop_water_gap_difference_2_vs_1")
+#> [1] "Processing 2 output variables. This can take some time."
+#> [1] "Output variable 1 (Mean_Crop_water_gap_difference_2_vs_1) completed."
+#> [1] "Output variable 2 (Mean_Crop_water_gap_difference_3_vs_1) completed."
+```
+
+The EVPI summary statistics for the mean crop water gap difference
+between the baseline UNRES and EFLOW scenarios.
+
+``` r
+summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
+#>    variable         expected_gain        EVPI_do    EVPI_dont            EVPI  
+#>  Length:71          Min.   :0.01862   Min.   :0   Min.   :0.00000   Min.   :0  
+#>  Class :character   1st Qu.:0.08705   1st Qu.:0   1st Qu.:0.06397   1st Qu.:0  
+#>  Mode  :character   Median :0.11872   Median :0   Median :0.10968   Median :0  
+#>                     Mean   :0.10488   Mean   :0   Mean   :0.08715   Mean   :0  
+#>                     3rd Qu.:0.12458   3rd Qu.:0   3rd Qu.:0.12435   3rd Qu.:0  
+#>                     Max.   :0.17034   Max.   :0   Max.   :0.17034   Max.   :0  
+#>                     NA's   :12                                                 
+#>    decision        
+#>  Length:71         
+#>  Class :character  
+#>  Mode  :character  
+#>                    
+#>                    
+#>                    
+#> 
+```
+
+The EVPI summary statistics for the mean crop wter gap difference
+between the baseline UNRES and SUPPL scenarios.
+
+``` r
+summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
+#>    variable         expected_gain         EVPI_do         EVPI_dont      EVPI  
+#>  Length:71          Min.   :-0.41267   Min.   :0.0000   Min.   :0   Min.   :0  
+#>  Class :character   1st Qu.:-0.39056   1st Qu.:0.1394   1st Qu.:0   1st Qu.:0  
+#>  Mode  :character   Median :-0.37450   Median :0.3387   Median :0   Median :0  
+#>                     Mean   :-0.31421   Mean   :0.2611   Mean   :0   Mean   :0  
+#>                     3rd Qu.:-0.26694   3rd Qu.:0.3901   3rd Qu.:0   3rd Qu.:0  
+#>                     Max.   :-0.04822   Max.   :0.4127   Max.   :0   Max.   :0  
+#>                     NA's   :12                                                 
+#>    decision        
+#>  Length:71         
+#>  Class :character  
+#>  Mode  :character  
+#>                    
+#>                    
+#>                    
+#> 
 ```
 
 ## Estimate values
@@ -678,7 +1045,7 @@ Software* 115 (May): 164–75.
 <div id="ref-R-decisionSupport" class="csl-entry">
 
 Luedeling, Eike, Lutz Goehring, Katja Schiffers, Cory Whitney, and
-Eduardo Fernandez. 2021. *decisionSupport: Quantitative Support of
+Eduardo Fernandez. 2022. *decisionSupport: Quantitative Support of
 Decision Making Under Uncertainty*. <http://www.worldagroforestry.org/>.
 
 </div>
