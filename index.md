@@ -843,9 +843,9 @@ ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
 
 Here we calculate the Expected Value of Perfect Information (EVPI) using
 the `multi_EVPI` function in the `decisionSupport` package. The results
-show that there would be little additional value int eh knowledge gained
-by gathering further knowledge on any ofthe variables that were included
-in the analysis.
+show that there would be little additional value in the knowledge gained
+by gathering further knowledge on any of the variables that were
+included in the analysis.
 
 ``` r
 # to ensure a clear process (not overwriting the original data) 
@@ -887,7 +887,7 @@ summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 #> 
 ```
 
-The EVPI summary statistics for the mean crop wter gap difference
+The EVPI summary statistics for the mean crop water gap difference
 between the baseline UNRES and SUPPL scenarios.
 
 ``` r
