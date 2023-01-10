@@ -14,7 +14,7 @@ Luedeling 2018) to assess farming futures given e-flow forecasts under
 different management options. To build these simulations we use
 functions from the `decisionSupport` (Luedeling et al. 2022), `dplyr`
 (Wickham, François, et al. 2022), `nasapower` (Sparks 2022), `patchwork`
-(Pedersen 2020), `tidyverse` (Wickham 2021) and `Evapotranspiration`
+(Pedersen 2020), `tidyverse` (Wickham 2022b) and `Evapotranspiration`
 (Guo, Westra, and Peterson 2022) libraries in the R programming language
 (R Core Team 2022).
 
@@ -125,7 +125,7 @@ as the Net Present Value.
 
 In the following we use of various decisionSupport functions, which use
 the `tidyverse` libraries (Wickham et al. 2019) including `ggplot2`
-(Wickham, Chang, et al. 2022), `plyr` (Wickham 2022) and `dplyr`
+(Wickham, Chang, et al. 2022), `plyr` (Wickham 2022a) and `dplyr`
 (Wickham, François, et al. 2022) among others in the [R programming
 language](https://www.r-project.org/) (R Core Team 2022).
 
@@ -142,95 +142,85 @@ Carlo.
 ``` r
 limpopo_decision_function <- function(x, varnames){
 
-# generating boundary conditions for the simulation run 
+# generating boundary conditions for the simulation run ####
 
-# simulate how much rainwater is available
+# simulate how much rainwater is available in mm ####
 rainfall<-sapply(1:12,function(x) eval(parse(text=paste0("prec_",x))))
 
 effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
 effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 
-# We compute crop water needs based on ET0 
-# Computed based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package)
-# Input temperature data comes from the NASAPOWER dataset 
-# (accessed through the nasapower package) 
-# The scenario data are based on scenarios that represent conditions 
-# during real years in the past
-# To get from ET0 to crop water use, we need to multiply ET0 with a crop
-# coefficient (kc), which is estimated for each month
-
-ET0<-sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
-
-kc<-sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
-
+# Compute crop water needs based on ET0 ####
+# Based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
+ET0 <- sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
+# To get from ET0 to crop water use, we need to multiply ET0 with a crop coefficient (kc), which is estimated for each month.
+kc <- sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
+# resulting 12 months of crop water needs
 cropwat_need<-ET0*kc # in mm
 
+# Compute irrigation water needs ####
 irrigation_need<-cropwat_need-effective_rainfall # in mm
 
-# define river flow and eflow for each month ####
+# Define river flow for each month ####
 # Base river flow data from 1920 to 2010, Letaba River at EWR site EWR4 (Letaba Ranch upstream Little Letaba confluence)
-pre_livestock_river_flow<-sapply(1:12,function(x) eval(parse(text=paste0("river_flow_",x)))) # in m3 / month
-eflow<-sapply(1:12,function(x) eval(parse(text=paste0("eflow_",x)))) # in m3 / month
+pre_livestock_river_flow <- sapply(1:12,function(x) eval(parse(text=paste0("river_flow_",x)))) # in m3 / month
 
-# watering livestock
+# Define e-flow for each month ####
+eflow <- sapply(1:12,function(x) eval(parse(text=paste0("eflow_",x)))) # in m3 / month
+
+# Calculating the water needed for watering livestock ####
 # assuming that this is more or less stable throughout the year, but varies a bit
-livestock_water_needs<-vv(livestock_water_need,var_CV,12)
+livestock_water_needs <- vv(livestock_water_need,var_CV,12)
+# assuming that the eflows aren't affecting ability to water livestock and that there's always enough water for all the livestock
+river_flow <- pre_livestock_river_flow-livestock_water_needs
 
-# assuming that the eflows aren't affecting ability to water livestock and that there's always enough
-# water for all the livestock
-river_flow<-pre_livestock_river_flow-livestock_water_needs
+# Calculating the farmed area ####
+# Total farmed area in ha in the region and number of farm households
+demand_for_farm_area <- n_subsistence_farmers*necessary_farm_size_per_household
+# ha of farmed area either all that is available or just what is demanded (if that is less) minus the expected portion of that land that is not available for sociopolitical reasons
+farmed_area <- min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
 
-# calculating the farmed area
-demand_for_farm_area<-n_subsistence_farmers*necessary_farm_size_per_household
-farmed_area<-min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
+# Calculating the total annual crop water need m3/ha ####
+total_cropwater_need <- cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
+total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall
 
-total_cropwater_need<-cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
-total_effective_rainfall<-effective_rainfall*farmed_area*10 # total effective rainfall
+# Calculating the total annual irrigation need m3/ha ####
+total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha
 
-# total irrigation need
-total_irrigation_need<-total_cropwater_need-total_effective_rainfall # in m3
+# Calculating the annual water losses in m3/ha ####
+# from the efficiency of the pumps and in the water allocation 
+efficiency_pumps <- vv(effi_pump,var_CV,12)
+efficiency_irrig_scheduling <- vv(effi_sched,var_CV,12)
+efficiency_pumps <- sapply(efficiency_pumps, function(x)  min(x,1))
+efficiency_pumps <- sapply(efficiency_pumps, function(x)  max(x,0))
+efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
+efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
 
-# water losses are calculated from the efficiency of the pumps and the water allocation
-efficiency_pumps<-vv(effi_pump,var_CV,12)
-efficiency_irrig_scheduling<-vv(effi_sched,var_CV,12)
-efficiency_pumps<-sapply(efficiency_pumps, function(x)  min(x,1))
-efficiency_pumps<-sapply(efficiency_pumps, function(x)  max(x,0))
-efficiency_irrig_scheduling<-sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
-efficiency_irrig_scheduling<-sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
+water_losses_share <- (1-efficiency_pumps*efficiency_irrig_scheduling)
 
-water_losses_share<-(1-efficiency_pumps*efficiency_irrig_scheduling)
+irrigation_water_need <- total_irrigation_need/(1-water_losses_share) # m3/ha 
 
-irrigation_water_need<-total_irrigation_need/(1-water_losses_share)
+# Scenario 1 - UNRES unrestricted baseline with no eflows ####
+# No restrictions at all for water extraction. Little or no effective measures are taken to ensure that e-flows are maintained at times when the present flow is below the e-flow requirement. 
+scen1_usable_river_flow <- sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
 
-# eflow Scenario 1 - no eflows
-scen1_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
+# Scenario 2 - EFLOW abstraction control ####
+# with eflows as a limit to extraction only. E-flows are to be ensured whenever there is more water in the river than the e-flow requirement would mandate, i.e. farmers aren't allowed to extract water beyond the e-flow requirement. 
+scen2_usable_river_flow <- sapply(1:12,function(x) max(0,river_flow[x]-max(eflow[x],minimum_flow_to_operate_pumps)))
 
-# eflow Scenario 2 - eflows as a limit to extraction only
-
-# eflows are to be ensured whenever there is more water in the river than the eflow
-# requirement would mandate, i.e. farmers aren't allowed to extract water beyond
-# the eflow requirement.
-# no measures are taken to ensure that eflows are maintained at times when
-# the present flow is below the eflow requirement. 
-
-scen2_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-max(eflow[x],minimum_flow_to_operate_pumps)))
-
-# eflow Scenario 3 - eflows are assured by dam releases
-
-# whenever the present flow is below the eflow requirement, water is released
-# from an upstream dam to ensure that the eflows are met.
-
+# Scenario 3 - SUPPL dam releases ####
+# e-flows are assured by dam releases, whenever the present flow is below the e-flow requirement, water is released from an upstream dam to ensure that the e-flows are met.
 adj_river_flow <- sapply(1:12, function(x)
   max(river_flow[x], eflow[x]))
-
-required_dam_release <- adj_river_flow - river_flow
 
 scen3_usable_river_flow <-
   sapply(1:12, function(x)
     max(0, adj_river_flow[x] - minimum_flow_to_operate_pumps))
 
-# calculate how much water gets extracted from the river
+# Calculate monthly how much water is released from an upstream dam to ensure that the e-flows are met
+required_dam_release <- adj_river_flow - river_flow
 
+# Calculate how much water gets extracted from the river
 scen1_extracted_river_water <-
   sapply(1:12, function(x)
     min(scen1_usable_river_flow[x], irrigation_water_need[x]))
@@ -245,6 +235,7 @@ scen3_extracted_river_water <-
 scen1_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen1_extracted_river_water[x]))
+# extracted water is often less than the extracted water under the EFLOW intervention
 scen2_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen2_extracted_river_water[x])) 
@@ -252,18 +243,18 @@ scen3_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen3_extracted_river_water[x]))
 
-scen1_irrigation_shortfall<-scen1_water_shortfall*(1-water_losses_share)
-scen2_irrigation_shortfall<-scen2_water_shortfall*(1-water_losses_share)
-scen3_irrigation_shortfall<-scen3_water_shortfall*(1-water_losses_share)
+scen1_irrigation_shortfall <- scen1_water_shortfall*(1-water_losses_share)
+scen2_irrigation_shortfall <- scen2_water_shortfall*(1-water_losses_share)
+scen3_irrigation_shortfall <- scen3_water_shortfall*(1-water_losses_share)
 
-scen1_crop_water_gap<-scen1_irrigation_shortfall/(cropwat_need*farmed_area*10)
-scen2_crop_water_gap<-scen2_irrigation_shortfall/(cropwat_need*farmed_area*10)
-scen3_crop_water_gap<-scen3_irrigation_shortfall/(cropwat_need*farmed_area*10)
+scen1_crop_water_gap <- scen1_irrigation_shortfall/(cropwat_need*farmed_area*10)
+scen2_crop_water_gap <- scen2_irrigation_shortfall/(cropwat_need*farmed_area*10)
+scen3_crop_water_gap <- scen3_irrigation_shortfall/(cropwat_need*farmed_area*10)
 
 # calculate how much water is left after farmers extracted water
-scen1_river_flow_downstream<-river_flow-scen1_extracted_river_water
-scen2_river_flow_downstream<-river_flow-scen2_extracted_river_water
-scen3_river_flow_downstream<-adj_river_flow-scen3_extracted_river_water
+scen1_river_flow_downstream <- river_flow-scen1_extracted_river_water
+scen2_river_flow_downstream <- river_flow-scen2_extracted_river_water
+scen3_river_flow_downstream <- adj_river_flow-scen3_extracted_river_water
 
 # calculate outputs and differences 
 
@@ -399,8 +390,8 @@ colnames(presentflow_permonth)[1]<-"Year"
 
 # The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar year of this period.
 
-presentflow_permonth[2:nrow(presentflow_permonth),month.abb[1:9]]<-
-  presentflow_permonth[1:(nrow(presentflow_permonth)-1),month.abb[1:9]]
+presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <- 
+  presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
 
 presentflow_permonth[1,month.abb[1:9]]<-NA
 
@@ -452,279 +443,43 @@ write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 
 ### Water needs
 
-``` r
-# Here the general estimates about needed water for crops
-plotting_simulations <- mcSimulation_results 
-
-Fig_total_annual_crop_water_irrigation_need <- 
-        decisionSupport::plot_distributions(mcSimulation_object = plotting_simulations,
-                                    vars = c("yearly_crop_water_need",
-                                             "yearly_irrigation_water_need"),
-                                    method = 'smooth_simple_overlay',
-                                    x_axis_name = "",
-                                    y_axis_name = "Distribution density",
-                                    base_size = 13)  + 
-                    ggplot2::theme_classic() + 
-                    ggplot2::labs(x = expression(Total~annual~water~need~(m^3))) + 
-                    ggplot2::labs(fill = "") +
-                    ggplot2::scale_fill_discrete(labels=c('Crops', 'Irrigation')) +     
-                    ggplot2::theme(legend.position="bottom") 
-#> Scale for 'fill' is already present. Adding another scale for 'fill', which
-#> will replace the existing scale.
-
-Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plotting_simulations, 
-              cashflow_var_name = "irrigation_water_need",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  labs(y = expression(Monthly~irrigation~water~need~(m^3)))
-```
+    #> Scale for fill is already present.
+    #> Adding another scale for fill, which will replace the existing scale.
 
 ### Baseline vs scenarios results
 
-``` r
-library(patchwork)
-
-Fig_total_annual_crop_water_irrigation_need +
-  inset_element(Fig_monthly_irrigation_water_need, 
-                  left = 0.29, 
-                  bottom = 0.29, 
-                  right = 0.97, 
-                  top = 0.97) + 
-  plot_annotation(title = "Annual crop water need")
-```
-
-![](index_files/figure-gfm/plot_baseline_results-1.png)<!-- -->
-
-``` r
-
-ggsave("figures/Fig_3_water_needs.png", width=10, height=5)
-
-
-gap1_simulations <- mcSimulation_results 
-
-gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)] <- gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]*100
-
-Fig_monthly_baseline_crop_water_gap <- 
-  plot_cashflow(mcSimulation_object = gap1_simulations, 
-              cashflow_var_name = "Crop_water_gap_scen1_",
-              y_axis_name = "",
-              x_axis_name = "", 
-              facet_labels = "") + 
-            labs(y = expression("")) + 
-  annotate(geom="text", x=3, y=93, 
-           label=expression(atop("Total gap (%) UNRES", 
-                   paste("unrestricted water use")))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank())
-
-
-gap2_1_simulations <- mcSimulation_results 
-
-gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
-
-monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2_1_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
-              y_axis_name = "",
-              x_axis_name = "", 
-              facet_labels = "") + 
-  annotate(geom="text", x=3, y=77, 
-           label=expression(atop("% change EFLOW", 
-                                 paste("abstraction control")))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank()) + 
-  labs(y = "Monthly crop water gap for all e-flows scenarios")
-
-gap3_1_simulations <- mcSimulation_results
-
-gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
-
-monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = gap3_1_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  annotate(geom="text", x=3, y= -80, 
-            label=(expression(atop("% change SUPPL", 
-                                   paste("dam releases")))))
-
-
-library(patchwork)
-
-Fig_monthly_baseline_crop_water_gap +
-  monthly_crop_water_gap_environmental +
-  monthly_crop_water_gap_suppl +
-  plot_layout(ncol = 1, guides = "collect")  
-#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
-#> 'expression'
-
-#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
-#> 'expression'
-
-#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
-#> 'expression'
-```
-
-![](index_files/figure-gfm/plot_baseline_results-2.png)<!-- -->
-
-``` r
-ggsave("figures/Fig_5_flows.png", width=7, height=10)
-#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
-#> 'expression'
-
-#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
-#> 'expression'
-
-#> Warning in is.na(x): is.na() applied to non-(list or vector) of type
-#> 'expression'
-```
+![](index_files/figure-gfm/plot_baseline_results-1.png)<!-- -->![](index_files/figure-gfm/plot_baseline_results-2.png)<!-- -->
 
 ### Change in crop water gap
 
-``` r
-# Here the distribution of the changes in the crop water gap through e-flows.
+This is a plot of the change in the crop water gap from the baseline if
+the intervention is put into place. It shows the percentage of water
+that is lacking in comparison to the baseline scenario.
 
-eflow_simulations <- mcSimulation_results
-
-eflow_simulations$y$scen1_crop_water_gap <- eflow_simulations$y$scen1_crop_water_gap*100
-
-eflow_simulations$y$Mean_Crop_water_gap_difference_2_vs_1 <- eflow_simulations$y$Mean_Crop_water_gap_difference_2_vs_1*100
-
-eflow_simulations$y$Mean_Crop_water_gap_difference_3_vs_1 <- eflow_simulations$y$Mean_Crop_water_gap_difference_3_vs_1*100
-
-Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = eflow_simulations,
-                                    vars = c("scen1_crop_water_gap",
-                                             "Mean_Crop_water_gap_difference_2_vs_1", 
-                                             "Mean_Crop_water_gap_difference_3_vs_1"),
-                                    method = 'smooth_simple_overlay',
-                                    x_axis_name = expression("Annual crop water gap % of needed irrigation water"),
-                                    y_axis_name = "Distribution density",
-                                    base_size = 13) + 
-                    ggplot2::theme_classic() + 
-                    ggplot2::labs(fill = "")  +
-                     ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
-#> Scale for 'fill' is already present. Adding another scale for 'fill', which
-#> will replace the existing scale.
-
-eflow2_1_simulations <- mcSimulation_results
-
-eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
-
-Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = eflow2_1_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  labs(y = expression("Crop water gap change (%)"))
-
-
-# Here are the impacts of e-flow policy on the crop water gap in each month (livelihoods focused, environmentally focused)
-
-library(patchwork)
-
- Fig_eflow_policy_effect_crop_water_gap + 
-   plot_layout(guides = "collect") + 
-   plot_annotation(title = "Crop water gap for all e-flows scenarios") &     
-                    ggplot2::theme(legend.position="bottom") 
-```
+    #> Scale for fill is already present.
+    #> Adding another scale for fill, which will replace the existing scale.
 
 ![](index_files/figure-gfm/plot_eflows_gap_change-1.png)<!-- -->
 
-``` r
-ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
-```
+Here is a plot for comparison to the baseline scenario. This is a plot
+of the mean annual crop water gap (deficit in water needed for crops).
+This ranges from 0 to 0.8 percent.
+
+    #> Scale for fill is already present.
+    #> Adding another scale for fill, which will replace the existing scale.
+
+![](index_files/figure-gfm/plot_baseline_comparison-1.png)<!-- -->
+
+Percent change in the crop water gap (deficit for crops) under the EFLOW
+scenario.
 
 ### Dam releases
 
-``` r
-releases_simulations <- mcSimulation_results
-
-Fig_7_required_dam_release <- plot_cashflow(mcSimulation_object = releases_simulations, 
-              cashflow_var_name = "scen3_dam_release",
-              y_axis_name = "a",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  labs(y = expression(atop(Required~water~release, paste(from~upstream~dams~(m^3)))))
-
-library(patchwork)
-
-  Fig_7_required_dam_release +
-  plot_layout(ncol = 1, guides = "collect")  
-```
-
-![](index_files/figure-gfm/dam_release-1.png)<!-- -->
-
-``` r
-  
-ggsave("figures/Fig_7_dam_release.png", width=7, height=5)
-```
+![](index_files/figure-gfm/Fig_dam_release-1.png)<!-- -->
 
 ### Stream flow
 
-``` r
-# Here's the impact on stream flow 
-#('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
-#Downstream river flows also vary throughout the year under the no e-flows scenario.
-
-flow_simulations <- mcSimulation_results
-
-Fig_monthly_downstream_river_flow <-
-  plot_cashflow(mcSimulation_object = flow_simulations, 
-              cashflow_var_name = "Downstream_river_flow_1_",
-              y_axis_name = "",
-              x_axis_name = "", 
-              facet_labels = "") + 
-  annotate(geom="text", x=9, y= 200000000, 
-            label=(expression(atop("UNRES", 
-                                   paste("(unrestricted) baseline"))))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank())
-
-# Here's the impact on stream flow Downstream_difference_2_vs_1:
-
-Fig_monthly_change_in_downstream_river_flow_env_eflows <-
-  plot_cashflow(mcSimulation_object = flow_simulations, 
-              cashflow_var_name = "Downstream_difference_2_vs_1",
-              y_axis_name = "",
-              x_axis_name = "", 
-              facet_labels = "") +  
-  annotate(geom="text", x=9, y= 250000, 
-            label=(expression(atop("EFLOW", 
-                                   paste("abstraction control"))))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank()) + 
-  labs(y = expression(Downstream~river~flow~(m^3)))
-
-Fig_monthly_change_in_downstream_river_flow_live_eflows <-
-  plot_cashflow(mcSimulation_object = flow_simulations, 
-              cashflow_var_name = "Downstream_difference_3_vs_1",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  annotate(geom="text", x=9, y= 400000, 
-            label=(expression(atop("SUPPL", 
-                                   paste("dam releases")))))
-
-
-
-library(patchwork)
-
-  Fig_monthly_downstream_river_flow + 
-  Fig_monthly_change_in_downstream_river_flow_env_eflows +
-    Fig_monthly_change_in_downstream_river_flow_live_eflows +
-  plot_layout(ncol = 1, guides = "collect")  
-```
-
-![](index_files/figure-gfm/stream-flow-1.png)<!-- -->
-
-``` r
-    # plot_annotation(title = expression(Downstream~river~flow~(m^3))) 
-
-  # plot_annotation(tag_levels = 'a') +
-# guides = "collect"
-
-ggsave("figures/Fig_6_downstream.png", width=7, height=10)
-```
+![](index_files/figure-gfm/Fig_stream-flow-1.png)<!-- -->
 
 ## Sensitivity analysis
 
@@ -836,6 +591,7 @@ library(patchwork)
 
 ``` r
 
+
 ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
 ```
 
@@ -912,88 +668,88 @@ summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
 
 ## Estimate values
 
-| Description                                                                                                                                               | variable                          | distribution |       lower |       upper | label                                |
-|:----------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------|:-------------|------------:|------------:|:-------------------------------------|
-| Precipitation in month 1                                                                                                                                  | prec_1                            | posnorm      |       45.00 |      135.00 | Precipitation in January             |
-| Precipitation in month 2                                                                                                                                  | prec_2                            | posnorm      |       31.00 |       93.00 | Precipitation in February            |
-| Precipitation in month 3                                                                                                                                  | prec_3                            | posnorm      |       25.00 |       75.00 | Precipitation in March               |
-| Precipitation in month 4                                                                                                                                  | prec_4                            | posnorm      |       12.50 |       37.50 | Precipitation in April               |
-| Precipitation in month 5                                                                                                                                  | prec_5                            | posnorm      |        5.00 |       15.00 | Precipitation in May                 |
-| Precipitation in month 6                                                                                                                                  | prec_6                            | posnorm      |        1.00 |        3.00 | Precipitation in June                |
-| Precipitation in month 7                                                                                                                                  | prec_7                            | posnorm      |        2.00 |        6.00 | Precipitation in July                |
-| Precipitation in month 8                                                                                                                                  | prec_8                            | posnorm      |        3.00 |        9.00 | Precipitation in August              |
-| Precipitation in month 9                                                                                                                                  | prec_9                            | posnorm      |        7.00 |       21.00 | Precipitation in September           |
-| Precipitation in month 10                                                                                                                                 | prec_10                           | posnorm      |       12.50 |       37.50 | Precipitation in October             |
-| Precipitation in month 11                                                                                                                                 | prec_11                           | posnorm      |       35.00 |      105.00 | Precipitation in November            |
-| Precipitation in month 12                                                                                                                                 | prec_12                           | posnorm      |       45.00 |      135.00 | Precipitation in December            |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package)                                                  | ET0_1                             | posnorm      |      144.00 |      240.00 | Ref. evapotranspiration in January   |
-| Reference evapotranspiration (ET0) mm/per ha month 2                                                                                                      | ET0_2                             | posnorm      |      114.75 |      191.25 | Ref. evapotranspiration in February  |
-| Reference evapotranspiration (ET0) mm/per ha month 3                                                                                                      | ET0_3                             | posnorm      |       96.00 |      160.00 | Ref. evapotranspiration in March     |
-| Reference evapotranspiration (ET0) mm/per ha month 4                                                                                                      | ET0_4                             | posnorm      |       67.50 |      112.50 | Ref. evapotranspiration in April     |
-| Reference evapotranspiration (ET0) mm/per ha month 5                                                                                                      | ET0_5                             | posnorm      |       52.50 |       87.50 | Ref. evapotranspiration in May       |
-| Reference evapotranspiration (ET0) mm/per ha month 6                                                                                                      | ET0_6                             | posnorm      |       32.25 |       53.75 | Ref. evapotranspiration in June      |
-| Reference evapotranspiration (ET0) mm/per ha month 7                                                                                                      | ET0_7                             | posnorm      |       40.50 |       67.50 | Ref. evapotranspiration in July      |
-| Reference evapotranspiration (ET0) mm/per ha month 8                                                                                                      | ET0_8                             | posnorm      |       52.50 |       87.50 | Ref. evapotranspiration in August    |
-| Reference evapotranspiration (ET0) mm/per ha month 9                                                                                                      | ET0_9                             | posnorm      |       71.25 |      118.75 | Ref. evapotranspiration in September |
-| Reference evapotranspiration (ET0) mm/per ha month 10                                                                                                     | ET0_10                            | posnorm      |       99.75 |      166.25 | Ref. evapotranspiration in October   |
-| Reference evapotranspiration (ET0) mm/per ha month 11                                                                                                     | ET0_11                            | posnorm      |      126.00 |      210.00 | Ref. evapotranspiration in November  |
-| Reference evapotranspiration (ET0) mm/per ha month 12                                                                                                     | ET0_12                            | posnorm      |      145.50 |      242.50 | Ref. evapotranspiration in December  |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| Crop coefficient in month 1                                                                                                                               | kc_1                              | posnorm      |        0.90 |        1.00 | kc_1                                 |
-| Crop coefficient in month 2                                                                                                                               | kc_2                              | posnorm      |        0.90 |        1.00 | kc_2                                 |
-| Crop coefficient in month 3                                                                                                                               | kc_3                              | posnorm      |        0.90 |        1.00 | kc_3                                 |
-| Crop coefficient in month 4                                                                                                                               | kc_4                              | posnorm      |        0.90 |        1.00 | kc_4                                 |
-| Crop coefficient in month 5                                                                                                                               | kc_5                              | posnorm      |        0.90 |        1.00 | kc_5                                 |
-| Crop coefficient in month 6                                                                                                                               | kc_6                              | posnorm      |        0.90 |        1.00 | kc_6                                 |
-| Crop coefficient in month 7                                                                                                                               | kc_7                              | posnorm      |        0.90 |        1.00 | kc_7                                 |
-| Crop coefficient in month 8                                                                                                                               | kc_8                              | posnorm      |        0.90 |        1.00 | kc_8                                 |
-| Crop coefficient in month 9                                                                                                                               | kc_9                              | posnorm      |        0.90 |        1.00 | kc_9                                 |
-| Crop coefficient in month 10                                                                                                                              | kc_10                             | posnorm      |        0.90 |        1.00 | kc_10                                |
-| Crop coefficient in month 11                                                                                                                              | kc_11                             | posnorm      |        0.90 |        1.00 | kc_11                                |
-| Crop coefficient in month 12                                                                                                                              | kc_12                             | posnorm      |        0.90 |        1.00 | kc_12                                |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| Effective rainfall - minimum threshold                                                                                                                    | effprec_low                       | posnorm      |        5.00 |       10.00 | effprec_low                          |
-| Effective rainfall - maximum threshold                                                                                                                    | effprec_high                      | posnorm      |       90.00 |      200.00 | effprec_high                         |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| Efficiency of water pumps                                                                                                                                 | effi_pump                         | tnorm_0\_1   |        0.70 |        0.90 | Efficiency of the water pumps        |
-| Efficiency of irrigation scheduling and allocation                                                                                                        | effi_sched                        | tnorm_0\_1   |        0.60 |        0.90 | Efficiency of irrigation scheduling  |
-| Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).                                                | var_CV                            | posnorm      |        5.00 |       20.00 | var_CV                               |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| Total irrigable area                                                                                                                                      | available_area                    | posnorm      |      100.00 |      300.00 | Available area                       |
-| Share of land that is not used because of socio-political obstacles                                                                                       | unused_sociopolit                 | tnorm_0\_1   |        0.20 |        0.40 | Share of unused lands                |
-| Number of subsistence households                                                                                                                          | n_subsistence_farmers             | posnorm      |       30.00 |      200.00 | Number of subsistence farmers        |
-| Farm size per subsistence households                                                                                                                      | necessary_farm_size_per_household | posnorm      |        1.50 |        2.50 | Needed farm size per household       |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| eflow in month 1                                                                                                                                          | eflow_1                           | posnorm      |  1658637.36 |  2487956.04 | eflow_1                              |
-| eflow in month 2                                                                                                                                          | eflow_2                           | posnorm      |  1953364.40 |  2930046.59 | eflow_2                              |
-| eflow in month 3                                                                                                                                          | eflow_3                           | posnorm      |  2172764.83 |  3259147.25 | eflow_3                              |
-| eflow in month 4                                                                                                                                          | eflow_4                           | posnorm      |  5094152.71 |  7641229.07 | eflow_4                              |
-| eflow in month 5                                                                                                                                          | eflow_5                           | posnorm      | 12093593.23 | 18140389.85 | eflow_5                              |
-| eflow in month 6                                                                                                                                          | eflow_6                           | posnorm      |  4593467.28 |  6890200.92 | eflow_6                              |
-| eflow in month 7                                                                                                                                          | eflow_7                           | posnorm      |  2895912.09 |  4343868.13 | eflow_7                              |
-| eflow in month 8                                                                                                                                          | eflow_8                           | posnorm      |  2484366.68 |  3726550.02 | eflow_8                              |
-| eflow in month 9                                                                                                                                          | eflow_9                           | posnorm      |  2173592.97 |  3260389.45 | eflow_9                              |
-| eflow in month 10                                                                                                                                         | eflow_10                          | posnorm      |  2052485.78 |  3078728.68 | eflow_10                             |
-| eflow in month 11                                                                                                                                         | eflow_11                          | posnorm      |  1670297.91 |  2505446.86 | eflow_11                             |
-| eflow in month 12                                                                                                                                         | eflow_12                          | posnorm      |  1419171.87 |  2128757.80 | eflow_12                             |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| Minimum river flow that allows running the pumps (in m3/month)                                                                                            | minimum_flow_to_operate_pumps     | posnorm      |    50000.00 |   150000.00 | Minimum flow required by pumps       |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| river flow in month 1 (Taken from base flow MCM data from 1920 to 2010 (Letaba River at EWR site EWR4 (Letaba Ranch upstream Little Letaba confluence) )) | river_flow_1                      | posnorm      |  3289641.29 | 14884566.58 | River flow in January                |
-| river flow in month 2                                                                                                                                     | river_flow_2                      | posnorm      |  3552190.55 | 28211390.25 | River flow in February               |
-| river flow in month 3                                                                                                                                     | river_flow_3                      | posnorm      |  3629341.05 | 24557111.18 | River flow in March                  |
-| river flow in month 4                                                                                                                                     | river_flow_4                      | posnorm      |  3593958.87 | 18063311.23 | River flow in April                  |
-| river flow in month 5                                                                                                                                     | river_flow_5                      | posnorm      |  3506617.70 | 11756278.83 | River flow in May                    |
-| river flow in month 6                                                                                                                                     | river_flow_6                      | posnorm      |  3448532.21 |  8821373.46 | River flow in June                   |
-| river flow in month 7                                                                                                                                     | river_flow_7                      | posnorm      |  3270609.32 |  7597819.59 | River flow in July                   |
-| river flow in month 8                                                                                                                                     | river_flow_8                      | posnorm      |  2770310.63 |  6595355.44 | River flow in August                 |
-| river flow in month 9                                                                                                                                     | river_flow_9                      | posnorm      |  2475234.52 |  5976080.25 | River flow in September              |
-| river flow in month 10                                                                                                                                    | river_flow_10                     | posnorm      |  2195340.50 |  5425988.65 | River flow in October                |
-| river flow in month 11                                                                                                                                    | river_flow_11                     | posnorm      |  2306113.10 |  6163707.61 | River flow in November               |
-| river flow in month 12                                                                                                                                    | river_flow_12                     | posnorm      |  2699506.90 |  7293206.41 | River flow in December               |
-|                                                                                                                                                           |                                   |              |          NA |          NA |                                      |
-| livestock water need per month                                                                                                                            | livestock_water_need              | posnorm      |      300.00 |     2000.00 | livestock_water_need                 |
+| Description                                                                                                                                               | variable                          | distribution |       lower |       upper | label                                  |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------|:-------------|------------:|------------:|:---------------------------------------|
+| Precipitation in month 1 in mm                                                                                                                            | prec_1                            | posnorm      |       45.00 |      135.00 | Precipitation in January in mm         |
+| Precipitation in month 2 in mm                                                                                                                            | prec_2                            | posnorm      |       31.00 |       93.00 | Precipitation in February in mm        |
+| Precipitation in month 3 in mm                                                                                                                            | prec_3                            | posnorm      |       25.00 |       75.00 | Precipitation in March in mm           |
+| Precipitation in month 4 in mm                                                                                                                            | prec_4                            | posnorm      |       12.50 |       37.50 | Precipitation in April in mm           |
+| Precipitation in month 5 in mm                                                                                                                            | prec_5                            | posnorm      |        5.00 |       15.00 | Precipitation in May in mm             |
+| Precipitation in month 6 in mm                                                                                                                            | prec_6                            | posnorm      |        1.00 |        3.00 | Precipitation in June in mm            |
+| Precipitation in month 7 in mm                                                                                                                            | prec_7                            | posnorm      |        2.00 |        6.00 | Precipitation in July in mm            |
+| Precipitation in month 8 in mm                                                                                                                            | prec_8                            | posnorm      |        3.00 |        9.00 | Precipitation in August in mm          |
+| Precipitation in month 9 in mm                                                                                                                            | prec_9                            | posnorm      |        7.00 |       21.00 | Precipitation in September in mm       |
+| Precipitation in month 10 in mm                                                                                                                           | prec_10                           | posnorm      |       12.50 |       37.50 | Precipitation in October in mm         |
+| Precipitation in month 11 in mm                                                                                                                           | prec_11                           | posnorm      |       35.00 |      105.00 | Precipitation in November in mm        |
+| Precipitation in month 12 in mm                                                                                                                           | prec_12                           | posnorm      |       45.00 |      135.00 | Precipitation in December in mm        |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package)                                                  | ET0_1                             | posnorm      |      144.00 |      240.00 | Ref. evapotranspiration in January     |
+| Reference evapotranspiration (ET0) mm/per ha month 2                                                                                                      | ET0_2                             | posnorm      |      114.75 |      191.25 | Ref. evapotranspiration in February    |
+| Reference evapotranspiration (ET0) mm/per ha month 3                                                                                                      | ET0_3                             | posnorm      |       96.00 |      160.00 | Ref. evapotranspiration in March       |
+| Reference evapotranspiration (ET0) mm/per ha month 4                                                                                                      | ET0_4                             | posnorm      |       67.50 |      112.50 | Ref. evapotranspiration in April       |
+| Reference evapotranspiration (ET0) mm/per ha month 5                                                                                                      | ET0_5                             | posnorm      |       52.50 |       87.50 | Ref. evapotranspiration in May         |
+| Reference evapotranspiration (ET0) mm/per ha month 6                                                                                                      | ET0_6                             | posnorm      |       32.25 |       53.75 | Ref. evapotranspiration in June        |
+| Reference evapotranspiration (ET0) mm/per ha month 7                                                                                                      | ET0_7                             | posnorm      |       40.50 |       67.50 | Ref. evapotranspiration in July        |
+| Reference evapotranspiration (ET0) mm/per ha month 8                                                                                                      | ET0_8                             | posnorm      |       52.50 |       87.50 | Ref. evapotranspiration in August      |
+| Reference evapotranspiration (ET0) mm/per ha month 9                                                                                                      | ET0_9                             | posnorm      |       71.25 |      118.75 | Ref. evapotranspiration in September   |
+| Reference evapotranspiration (ET0) mm/per ha month 10                                                                                                     | ET0_10                            | posnorm      |       99.75 |      166.25 | Ref. evapotranspiration in October     |
+| Reference evapotranspiration (ET0) mm/per ha month 11                                                                                                     | ET0_11                            | posnorm      |      126.00 |      210.00 | Ref. evapotranspiration in November    |
+| Reference evapotranspiration (ET0) mm/per ha month 12                                                                                                     | ET0_12                            | posnorm      |      145.50 |      242.50 | Ref. evapotranspiration in December    |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| Crop coefficient in month 1                                                                                                                               | kc_1                              | posnorm      |        0.90 |        1.00 | Crop coefficient in January            |
+| Crop coefficient in month 2                                                                                                                               | kc_2                              | posnorm      |        0.90 |        1.00 | Crop coefficient in February           |
+| Crop coefficient in month 3                                                                                                                               | kc_3                              | posnorm      |        0.90 |        1.00 | Crop coefficient in March              |
+| Crop coefficient in month 4                                                                                                                               | kc_4                              | posnorm      |        0.90 |        1.00 | Crop coefficient in April              |
+| Crop coefficient in month 5                                                                                                                               | kc_5                              | posnorm      |        0.90 |        1.00 | Crop coefficient in May                |
+| Crop coefficient in month 6                                                                                                                               | kc_6                              | posnorm      |        0.90 |        1.00 | Crop coefficient in June               |
+| Crop coefficient in month 7                                                                                                                               | kc_7                              | posnorm      |        0.90 |        1.00 | Crop coefficient in July               |
+| Crop coefficient in month 8                                                                                                                               | kc_8                              | posnorm      |        0.90 |        1.00 | Crop coefficient in August             |
+| Crop coefficient in month 9                                                                                                                               | kc_9                              | posnorm      |        0.90 |        1.00 | Crop coefficient in September          |
+| Crop coefficient in month 10                                                                                                                              | kc_10                             | posnorm      |        0.90 |        1.00 | Crop coefficient in October            |
+| Crop coefficient in month 11                                                                                                                              | kc_11                             | posnorm      |        0.90 |        1.00 | Crop coefficient in November           |
+| Crop coefficient in month 12                                                                                                                              | kc_12                             | posnorm      |        0.90 |        1.00 | Crop coefficient in December           |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| Effective rainfall - minimum threshold                                                                                                                    | effprec_low                       | posnorm      |        5.00 |       10.00 | Effective rainfall - minimum threshold |
+| Effective rainfall - maximum threshold                                                                                                                    | effprec_high                      | posnorm      |       90.00 |      200.00 | Effective rainfall - maximum threshold |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| Efficiency of water pumps                                                                                                                                 | effi_pump                         | tnorm_0\_1   |        0.70 |        0.90 | Efficiency of the water pumps          |
+| Efficiency of irrigation scheduling and allocation                                                                                                        | effi_sched                        | tnorm_0\_1   |        0.60 |        0.90 | Efficiency of irrigation scheduling    |
+| Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).                                                | var_CV                            | posnorm      |        5.00 |       20.00 | var_CV                                 |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| Total irrigable area                                                                                                                                      | available_area                    | posnorm      |      100.00 |      300.00 | Available area                         |
+| Share of land that is not used because of socio-political obstacles                                                                                       | unused_sociopolit                 | tnorm_0\_1   |        0.20 |        0.40 | Share of unused lands                  |
+| Number of subsistence households                                                                                                                          | n_subsistence_farmers             | posnorm      |       30.00 |      200.00 | Number of subsistence farmers          |
+| Farm size per subsistence households                                                                                                                      | necessary_farm_size_per_household | posnorm      |        1.50 |        2.50 | Needed farm size per household         |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| eflow in month 1 in m3 / month                                                                                                                            | eflow_1                           | posnorm      |  1658637.36 |  2487956.04 | e-flow in January in m3 / month        |
+| eflow in month 2 in m3 / month                                                                                                                            | eflow_2                           | posnorm      |  1953364.40 |  2930046.59 | e-flow in February in m3 / month       |
+| eflow in month 3                                                                                                                                          | eflow_3                           | posnorm      |  2172764.83 |  3259147.25 | e-flow in March in m3 / month          |
+| eflow in month 4                                                                                                                                          | eflow_4                           | posnorm      |  5094152.71 |  7641229.07 | e-flow in April in m3 / month          |
+| eflow in month 5                                                                                                                                          | eflow_5                           | posnorm      | 12093593.23 | 18140389.85 | e-flow in May in m3 / month            |
+| eflow in month 6                                                                                                                                          | eflow_6                           | posnorm      |  4593467.28 |  6890200.92 | e-flow in June in m3 / month           |
+| eflow in month 7                                                                                                                                          | eflow_7                           | posnorm      |  2895912.09 |  4343868.13 | e-flow in July in m3 / month           |
+| eflow in month 8                                                                                                                                          | eflow_8                           | posnorm      |  2484366.68 |  3726550.02 | e-flow in August in m3 / month         |
+| eflow in month 9                                                                                                                                          | eflow_9                           | posnorm      |  2173592.97 |  3260389.45 | e-flow in September in m3 / month      |
+| eflow in month 10                                                                                                                                         | eflow_10                          | posnorm      |  2052485.78 |  3078728.68 | e-flow in October in m3 / month        |
+| eflow in month 11                                                                                                                                         | eflow_11                          | posnorm      |  1670297.91 |  2505446.86 | e-flow in November in m3 / month       |
+| eflow in month 12                                                                                                                                         | eflow_12                          | posnorm      |  1419171.87 |  2128757.80 | e-flow in December in m3 / month       |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| Minimum river flow that allows running the pumps (in m3/month)                                                                                            | minimum_flow_to_operate_pumps     | posnorm      |    50000.00 |   150000.00 | Minimum flow required by pumps         |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| river flow in month 1 (Taken from base flow MCM data from 1920 to 2010 (Letaba River at EWR site EWR4 (Letaba Ranch upstream Little Letaba confluence) )) | river_flow_1                      | posnorm      |  3289641.29 | 14884566.58 | River flow in January                  |
+| river flow in month 2                                                                                                                                     | river_flow_2                      | posnorm      |  3552190.55 | 28211390.25 | River flow in February                 |
+| river flow in month 3                                                                                                                                     | river_flow_3                      | posnorm      |  3629341.05 | 24557111.18 | River flow in March                    |
+| river flow in month 4                                                                                                                                     | river_flow_4                      | posnorm      |  3593958.87 | 18063311.23 | River flow in April                    |
+| river flow in month 5                                                                                                                                     | river_flow_5                      | posnorm      |  3506617.70 | 11756278.83 | River flow in May                      |
+| river flow in month 6                                                                                                                                     | river_flow_6                      | posnorm      |  3448532.21 |  8821373.46 | River flow in June                     |
+| river flow in month 7                                                                                                                                     | river_flow_7                      | posnorm      |  3270609.32 |  7597819.59 | River flow in July                     |
+| river flow in month 8                                                                                                                                     | river_flow_8                      | posnorm      |  2770310.63 |  6595355.44 | River flow in August                   |
+| river flow in month 9                                                                                                                                     | river_flow_9                      | posnorm      |  2475234.52 |  5976080.25 | River flow in September                |
+| river flow in month 10                                                                                                                                    | river_flow_10                     | posnorm      |  2195340.50 |  5425988.65 | River flow in October                  |
+| river flow in month 11                                                                                                                                    | river_flow_11                     | posnorm      |  2306113.10 |  6163707.61 | River flow in November                 |
+| river flow in month 12                                                                                                                                    | river_flow_12                     | posnorm      |  2699506.90 |  7293206.41 | River flow in December                 |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+| livestock water need per month                                                                                                                            | livestock_water_need              | posnorm      |      300.00 |     2000.00 | livestock_water_need                   |
 
 This table contains the estimate values used for the Monte Carlo
 analysis
@@ -1090,17 +846,17 @@ Methods Guide; Agricultural Policy for Nutrition.” *World Agroforestry
 
 </div>
 
-<div id="ref-R-tidyverse" class="csl-entry">
+<div id="ref-R-plyr" class="csl-entry">
 
-Wickham, Hadley. 2021. *Tidyverse: Easily Install and Load the
-Tidyverse*. <https://CRAN.R-project.org/package=tidyverse>.
+Wickham, Hadley. 2022a. *Plyr: Tools for Splitting, Applying and
+Combining Data*. <https://CRAN.R-project.org/package=plyr>.
 
 </div>
 
-<div id="ref-R-plyr" class="csl-entry">
+<div id="ref-R-tidyverse" class="csl-entry">
 
-———. 2022. *Plyr: Tools for Splitting, Applying and Combining Data*.
-<https://CRAN.R-project.org/package=plyr>.
+———. 2022b. *Tidyverse: Easily Install and Load the Tidyverse*.
+<https://CRAN.R-project.org/package=tidyverse>.
 
 </div>
 

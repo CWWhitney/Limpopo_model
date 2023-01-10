@@ -9,7 +9,7 @@ bibliography:
 
 We generate a holistic model to simulate the contribution of e-flows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given e-flow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
 
-```{r, include = F}
+```{r load_basics, warning = F, include = F}
 #set global options for knitr chunks 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -23,6 +23,7 @@ set.seed(424242)
 
 # Load the necessary libraries 
 # devtools::install_github("eikeluedeling/decisionSupport")
+{
 library(decisionSupport)
 library(dplyr)
 library(knitr)
@@ -32,10 +33,10 @@ library(patchwork)
 library(rmarkdown)
 library(tidyverse)
 library(Evapotranspiration)
-
+}
 ```
 
-```{r, warning = F, include = F}
+```{r add_libraries_citations, warning = F, include = F}
 
 # Automatically write R package citation entries to a .bib file
 knitr::write_bib(c(.packages(),
@@ -98,8 +99,8 @@ In the following we use of various decisionSupport functions, which use the `tid
 Here we generate a model as a function using `decisionSupport` library we use the `decisionSupport` functions `vv()` to produce time series with variation from a pre-defined mean and coefficient of variation, `chance_event()` to simulate whether events occur and `discount()` to discount values along a time series and generate a Net Present Value for our intervention comparison.
 
 
-```{r make_variables, include=F}
-input_table<-"data/limpopo_input_table.csv"
+```{r make_variables, warning=F, include=F}
+input_table <- "data/limpopo_input_table.csv"
 
 make_variables <- function(est,n=1){ x <- random(rho=est, n=n)
 for(i in colnames(x)) assign(i, as.numeric(x[1,i]),envir=.GlobalEnv)}
@@ -110,98 +111,88 @@ make_variables(estimate_read_csv(input_table))
 
 The following script contains the basic model we used to run the Monte Carlo.
 
-```{r model}
+```{r model, warning=F}
 limpopo_decision_function <- function(x, varnames){
 
-# generating boundary conditions for the simulation run 
+# generating boundary conditions for the simulation run ####
 
-# simulate how much rainwater is available
+# simulate how much rainwater is available in mm ####
 rainfall<-sapply(1:12,function(x) eval(parse(text=paste0("prec_",x))))
 
 effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
 effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 
-# We compute crop water needs based on ET0 
-# Computed based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package)
-# Input temperature data comes from the NASAPOWER dataset 
-# (accessed through the nasapower package) 
-# The scenario data are based on scenarios that represent conditions 
-# during real years in the past
-# To get from ET0 to crop water use, we need to multiply ET0 with a crop
-# coefficient (kc), which is estimated for each month
-
-ET0<-sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
-
-kc<-sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
-
+# Compute crop water needs based on ET0 ####
+# Based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
+ET0 <- sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
+# To get from ET0 to crop water use, we need to multiply ET0 with a crop coefficient (kc), which is estimated for each month.
+kc <- sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
+# resulting 12 months of crop water needs
 cropwat_need<-ET0*kc # in mm
 
+# Compute irrigation water needs ####
 irrigation_need<-cropwat_need-effective_rainfall # in mm
 
-# define river flow and eflow for each month ####
+# Define river flow for each month ####
 # Base river flow data from 1920 to 2010, Letaba River at EWR site EWR4 (Letaba Ranch upstream Little Letaba confluence)
-pre_livestock_river_flow<-sapply(1:12,function(x) eval(parse(text=paste0("river_flow_",x)))) # in m3 / month
-eflow<-sapply(1:12,function(x) eval(parse(text=paste0("eflow_",x)))) # in m3 / month
+pre_livestock_river_flow <- sapply(1:12,function(x) eval(parse(text=paste0("river_flow_",x)))) # in m3 / month
 
-# watering livestock
+# Define e-flow for each month ####
+eflow <- sapply(1:12,function(x) eval(parse(text=paste0("eflow_",x)))) # in m3 / month
+
+# Calculating the water needed for watering livestock ####
 # assuming that this is more or less stable throughout the year, but varies a bit
-livestock_water_needs<-vv(livestock_water_need,var_CV,12)
+livestock_water_needs <- vv(livestock_water_need,var_CV,12)
+# assuming that the eflows aren't affecting ability to water livestock and that there's always enough water for all the livestock
+river_flow <- pre_livestock_river_flow-livestock_water_needs
 
-# assuming that the eflows aren't affecting ability to water livestock and that there's always enough
-# water for all the livestock
-river_flow<-pre_livestock_river_flow-livestock_water_needs
+# Calculating the farmed area ####
+# Total farmed area in ha in the region and number of farm households
+demand_for_farm_area <- n_subsistence_farmers*necessary_farm_size_per_household
+# ha of farmed area either all that is available or just what is demanded (if that is less) minus the expected portion of that land that is not available for sociopolitical reasons
+farmed_area <- min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
 
-# calculating the farmed area
-demand_for_farm_area<-n_subsistence_farmers*necessary_farm_size_per_household
-farmed_area<-min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
+# Calculating the total annual crop water need m3/ha ####
+total_cropwater_need <- cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
+total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall
 
-total_cropwater_need<-cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
-total_effective_rainfall<-effective_rainfall*farmed_area*10 # total effective rainfall
+# Calculating the total annual irrigation need m3/ha ####
+total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha
 
-# total irrigation need
-total_irrigation_need<-total_cropwater_need-total_effective_rainfall # in m3
+# Calculating the annual water losses in m3/ha ####
+# from the efficiency of the pumps and in the water allocation 
+efficiency_pumps <- vv(effi_pump,var_CV,12)
+efficiency_irrig_scheduling <- vv(effi_sched,var_CV,12)
+efficiency_pumps <- sapply(efficiency_pumps, function(x)  min(x,1))
+efficiency_pumps <- sapply(efficiency_pumps, function(x)  max(x,0))
+efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
+efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
 
-# water losses are calculated from the efficiency of the pumps and the water allocation
-efficiency_pumps<-vv(effi_pump,var_CV,12)
-efficiency_irrig_scheduling<-vv(effi_sched,var_CV,12)
-efficiency_pumps<-sapply(efficiency_pumps, function(x)  min(x,1))
-efficiency_pumps<-sapply(efficiency_pumps, function(x)  max(x,0))
-efficiency_irrig_scheduling<-sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
-efficiency_irrig_scheduling<-sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
+water_losses_share <- (1-efficiency_pumps*efficiency_irrig_scheduling)
 
-water_losses_share<-(1-efficiency_pumps*efficiency_irrig_scheduling)
+irrigation_water_need <- total_irrigation_need/(1-water_losses_share) # m3/ha 
 
-irrigation_water_need<-total_irrigation_need/(1-water_losses_share)
+# Scenario 1 - UNRES unrestricted baseline with no eflows ####
+# No restrictions at all for water extraction. Little or no effective measures are taken to ensure that e-flows are maintained at times when the present flow is below the e-flow requirement. 
+scen1_usable_river_flow <- sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
 
-# eflow Scenario 1 - no eflows
-scen1_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-minimum_flow_to_operate_pumps))
+# Scenario 2 - EFLOW abstraction control ####
+# with eflows as a limit to extraction only. E-flows are to be ensured whenever there is more water in the river than the e-flow requirement would mandate, i.e. farmers aren't allowed to extract water beyond the e-flow requirement. 
+scen2_usable_river_flow <- sapply(1:12,function(x) max(0,river_flow[x]-max(eflow[x],minimum_flow_to_operate_pumps)))
 
-# eflow Scenario 2 - eflows as a limit to extraction only
-
-# eflows are to be ensured whenever there is more water in the river than the eflow
-# requirement would mandate, i.e. farmers aren't allowed to extract water beyond
-# the eflow requirement.
-# no measures are taken to ensure that eflows are maintained at times when
-# the present flow is below the eflow requirement. 
-
-scen2_usable_river_flow<-sapply(1:12,function(x) max(0,river_flow[x]-max(eflow[x],minimum_flow_to_operate_pumps)))
-
-# eflow Scenario 3 - eflows are assured by dam releases
-
-# whenever the present flow is below the eflow requirement, water is released
-# from an upstream dam to ensure that the eflows are met.
-
+# Scenario 3 - SUPPL dam releases ####
+# e-flows are assured by dam releases, whenever the present flow is below the e-flow requirement, water is released from an upstream dam to ensure that the e-flows are met.
 adj_river_flow <- sapply(1:12, function(x)
   max(river_flow[x], eflow[x]))
-
-required_dam_release <- adj_river_flow - river_flow
 
 scen3_usable_river_flow <-
   sapply(1:12, function(x)
     max(0, adj_river_flow[x] - minimum_flow_to_operate_pumps))
 
-# calculate how much water gets extracted from the river
+# Calculate monthly how much water is released from an upstream dam to ensure that the e-flows are met
+required_dam_release <- adj_river_flow - river_flow
 
+# Calculate how much water gets extracted from the river
 scen1_extracted_river_water <-
   sapply(1:12, function(x)
     min(scen1_usable_river_flow[x], irrigation_water_need[x]))
@@ -216,6 +207,7 @@ scen3_extracted_river_water <-
 scen1_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen1_extracted_river_water[x]))
+# extracted water is often less than the extracted water under the EFLOW intervention
 scen2_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen2_extracted_river_water[x])) 
@@ -223,18 +215,18 @@ scen3_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen3_extracted_river_water[x]))
 
-scen1_irrigation_shortfall<-scen1_water_shortfall*(1-water_losses_share)
-scen2_irrigation_shortfall<-scen2_water_shortfall*(1-water_losses_share)
-scen3_irrigation_shortfall<-scen3_water_shortfall*(1-water_losses_share)
+scen1_irrigation_shortfall <- scen1_water_shortfall*(1-water_losses_share)
+scen2_irrigation_shortfall <- scen2_water_shortfall*(1-water_losses_share)
+scen3_irrigation_shortfall <- scen3_water_shortfall*(1-water_losses_share)
 
-scen1_crop_water_gap<-scen1_irrigation_shortfall/(cropwat_need*farmed_area*10)
-scen2_crop_water_gap<-scen2_irrigation_shortfall/(cropwat_need*farmed_area*10)
-scen3_crop_water_gap<-scen3_irrigation_shortfall/(cropwat_need*farmed_area*10)
+scen1_crop_water_gap <- scen1_irrigation_shortfall/(cropwat_need*farmed_area*10)
+scen2_crop_water_gap <- scen2_irrigation_shortfall/(cropwat_need*farmed_area*10)
+scen3_crop_water_gap <- scen3_irrigation_shortfall/(cropwat_need*farmed_area*10)
 
 # calculate how much water is left after farmers extracted water
-scen1_river_flow_downstream<-river_flow-scen1_extracted_river_water
-scen2_river_flow_downstream<-river_flow-scen2_extracted_river_water
-scen3_river_flow_downstream<-adj_river_flow-scen3_extracted_river_water
+scen1_river_flow_downstream <- river_flow-scen1_extracted_river_water
+scen2_river_flow_downstream <- river_flow-scen2_extracted_river_water
+scen3_river_flow_downstream <- adj_river_flow-scen3_extracted_river_water
 
 # calculate outputs and differences 
 
@@ -271,7 +263,7 @@ The `numberOfModelRuns` argument is an integer indicating the number of model ru
 
 We first make a scenario file, for which we can use data for 1980 to 2020.
 
-```{r scenarios}
+```{r scenarios, warning=F}
 # load data from Evapotranspiration
 data("constants")
 
@@ -346,8 +338,8 @@ colnames(presentflow_permonth)[1]<-"Year"
 
 # The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar year of this period.
 
-presentflow_permonth[2:nrow(presentflow_permonth),month.abb[1:9]]<-
-  presentflow_permonth[1:(nrow(presentflow_permonth)-1),month.abb[1:9]]
+presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <- 
+  presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
 
 presentflow_permonth[1,month.abb[1:9]]<-NA
 
@@ -376,7 +368,7 @@ write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
 
 Here we run the model with the `scenario_mc` function from the `decisionSupport` package [@R-decisionSupport]. The function essentially generates a Monte Carlo model with data from existing scenarios for some of the model inputs.
 
-```{r mcSimulation_scenarios}
+```{r mcSimulation_scenarios, warning=F}
 # run the model with the scenario_mc function 
 mcSimulation_results <-
   scenario_mc(
@@ -391,11 +383,12 @@ mcSimulation_results <-
 #save this someplace to share
 write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 ```
+
 # Results
 
 ### Water needs
 
-```{r plot_water_needs}
+```{r plot_water_needs, warning=F, echo=FALSE}
 
 # Here the general estimates about needed water for crops
 plotting_simulations <- mcSimulation_results 
@@ -422,9 +415,10 @@ Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plottin
   labs(y = expression(Monthly~irrigation~water~need~(m^3)))
 
 ```
+
 ### Baseline vs scenarios results
 
-```{r plot_baseline_results}
+```{r plot_baseline_results, warning=F, echo=FALSE}
 library(patchwork)
 
 Fig_total_annual_crop_water_irrigation_need +
@@ -473,6 +467,7 @@ monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2
           axis.ticks = element_blank()) + 
   labs(y = "Monthly crop water gap for all e-flows scenarios")
 
+# flow of the differences for the plot
 gap3_1_simulations <- mcSimulation_results
 
 gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
@@ -497,42 +492,31 @@ Fig_monthly_baseline_crop_water_gap +
 ggsave("figures/Fig_5_flows.png", width=7, height=10)
 
 ```
+
 ### Change in crop water gap
 
-```{r plot_eflows_gap_change}
-# Here the distribution of the changes in the crop water gap through e-flows.
+This is a plot of the change in the crop water gap from the baseline if the intervention is put into place. It shows the percentage of water that is lacking in comparison to the baseline scenario.
+
+```{r plot_eflows_gap_change, warning=F, echo=FALSE}
+# Here the distribution of the changes in the crop water gap (deficit) through e-flows.
 
 eflow_simulations <- mcSimulation_results
-
-eflow_simulations$y$scen1_crop_water_gap <- eflow_simulations$y$scen1_crop_water_gap*100
 
 eflow_simulations$y$Mean_Crop_water_gap_difference_2_vs_1 <- eflow_simulations$y$Mean_Crop_water_gap_difference_2_vs_1*100
 
 eflow_simulations$y$Mean_Crop_water_gap_difference_3_vs_1 <- eflow_simulations$y$Mean_Crop_water_gap_difference_3_vs_1*100
 
 Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mcSimulation_object = eflow_simulations,
-                                    vars = c("scen1_crop_water_gap",
-                                             "Mean_Crop_water_gap_difference_2_vs_1", 
+                                    vars = c("Mean_Crop_water_gap_difference_2_vs_1",
                                              "Mean_Crop_water_gap_difference_3_vs_1"),
                                     method = 'smooth_simple_overlay',
-                                    x_axis_name = expression("Annual crop water gap % of needed irrigation water"),
+                                    x_axis_name = expression("Change in annual crop water gap % of needed irrigation water"),
                                     y_axis_name = "Distribution density",
                                     base_size = 13) + 
                     ggplot2::theme_classic() + 
-                    ggplot2::labs(fill = "")  +
-                     ggplot2::scale_fill_discrete(labels=c('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
-
-eflow2_1_simulations <- mcSimulation_results
-
-eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
-
-Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = eflow2_1_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  labs(y = expression("Crop water gap change (%)"))
-
+                    ggplot2::labs(fill = "") +
+                    ggplot2::scale_fill_discrete(labels=c( 'EFLOW abstraction control',
+                                                           'SUPPL dam releases')) 
 
 # Here are the impacts of e-flow policy on the crop water gap in each month (livelihoods focused, environmentally focused)
 
@@ -547,9 +531,46 @@ ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
 
 ```
 
+Here is a plot for comparison to the baseline scenario. This is a plot of the mean annual crop water gap (deficit in water needed for crops). This ranges from `r min(eflow_simulations$y$scen1_crop_water_gap)` to `r round(max(eflow_simulations$y$scen1_crop_water_gap),1)*100` percent. 
+
+```{r plot_baseline_comparison, warning=F, echo=FALSE}
+
+eflow_simulations$y$scen1_crop_water_gap <- eflow_simulations$y$scen1_crop_water_gap*100 
+
+decisionSupport::plot_distributions(mcSimulation_object = eflow_simulations,
+                                    vars = "scen1_crop_water_gap",
+                                    method = 'smooth_simple_overlay',
+                                    x_axis_name = expression("Annual crop water gap % of needed irrigation water"),
+                                    y_axis_name = "Distribution density",
+                                    base_size = 13) + 
+                    ggplot2::theme_classic() +
+                    ggplot2::theme(legend.position="bottom") +
+                    ggplot2::labs(fill = "") +
+                    ggplot2::scale_fill_discrete(labels='UNRES (unrestricted) baseline') 
+
+                                             
+```
+
+Percent change in the crop water gap (deficit for crops) under the EFLOW scenario. 
+
+```{r Fig_monthly_env_eflow_increase_crop_water_gap, warning=F, echo=FALSE}
+
+eflow2_1_simulations <- mcSimulation_results
+
+eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+
+Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = eflow2_1_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  labs(y = expression("Crop water gap change (%)"))
+
+```
+
 ### Dam releases
 
-```{r dam_release}
+```{r Fig_dam_release, warning=F, echo=FALSE}
 
 releases_simulations <- mcSimulation_results
 
@@ -571,7 +592,7 @@ ggsave("figures/Fig_7_dam_release.png", width=7, height=5)
 
 ### Stream flow
 
-```{r stream-flow, warning = F}
+```{r Fig_stream-flow, warning = F, echo=FALSE}
 
 # Here's the impact on stream flow 
 #('UNRES (unrestricted) baseline', 'EFLOW abstraction control', 'SUPPL dam releases')) 
@@ -640,7 +661,7 @@ We use the `plsr.mcSimulation` function of the `decisionSupport` package to run 
 We apply the aforementioned post-hoc analysis to the `mcSimulation()` outputs with `plsr.mcSimulation()` to determine the VIP score and coefficients of our PLS regression models. This functions use the outputs of the `mcSimulation()` selecting all the input variables from the decision analysis function in the parameter `object` and then runs a PLS regression with an outcome variable defined in the parameter `resultName`. We also need to import the input table again to replace the labels for the variables on the y-axis. The input table can include a `label` and `variable` column. The standard labels (from the `variable` column) are usually computer readable and not very nice for a plot. The `plot_pls()` function uses the text in the `label` column as replacement for the default text in the `variable` column.  
 
 
-```{r pls-crop_needs, echo=T, warning = F}
+```{r pls-crop_needs, warning = F}
 # to ensure a clear process (not overwriting the original data) 
 # rename the simulations results
 mcSimulation_pls <- mcSimulation_results
@@ -738,19 +759,19 @@ results_evpi <- multi_EVPI(mc = simulations_evpi_data_table,
 
 The EVPI summary statistics for the mean crop water gap difference between the baseline UNRES and EFLOW scenarios. 
 
-```{r}
+```{r evpi_summary_EVPI, warning=F}
 summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 ```
 
 The EVPI summary statistics for the mean crop water gap difference between the baseline UNRES and SUPPL scenarios.
 
-```{r}
+```{r evpi_summary_SUPPL, warning=F}
 summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
 ```
 
 ## Estimate values
  
-```{r estimate_table, echo=F}
+```{r estimate_table, warning=F, echo=F}
 input_table <- read.csv("data/limpopo_input_table.csv")
 kable(input_table, caption = 'This table contains the estimate values used for the Monte Carlo analysis') 
 ```
