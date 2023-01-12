@@ -128,10 +128,10 @@ ET0 <- sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
 # To get from ET0 to crop water use, we need to multiply ET0 with a crop coefficient (kc), which is estimated for each month.
 kc <- sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
 # resulting 12 months of crop water needs
-cropwat_need<-ET0*kc # in mm
+cropwat_need <- ET0*kc # in mm
 
 # Compute irrigation water needs ####
-irrigation_need<-cropwat_need-effective_rainfall # in mm
+irrigation_need <- cropwat_need-effective_rainfall # in mm
 
 # Define river flow for each month ####
 # Base river flow data from 1920 to 2010, Letaba River at EWR site EWR4 (Letaba Ranch upstream Little Letaba confluence)
@@ -158,7 +158,7 @@ total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective 
 
 # Calculating the total annual irrigation need m3/ha ####
 total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha
-
+# sum(total_irrigation_need/farmed_area) is around 8600 m3/ha, very close to the reported values across the literature in Limpopo
 # Calculating the annual water losses in m3/ha ####
 # from the efficiency of the pumps and in the water allocation 
 efficiency_pumps <- vv(effi_pump,var_CV,12)
@@ -168,9 +168,12 @@ efficiency_pumps <- sapply(efficiency_pumps, function(x)  max(x,0))
 efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
 efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
 
+# around 50% efficiency
 water_losses_share <- (1-efficiency_pumps*efficiency_irrig_scheduling)
 
 irrigation_water_need <- total_irrigation_need/(1-water_losses_share) # m3/ha 
+# irrigation inefficiency doubles the irrigation need
+# sum(irrigation_water_need-total_irrigation_need)/farmed_area is around 6,886
 
 # Scenario 1 - UNRES unrestricted baseline with no eflows ####
 # No restrictions at all for water extraction. Little or no effective measures are taken to ensure that e-flows are maintained at times when the present flow is below the e-flow requirement. 
@@ -207,7 +210,6 @@ scen3_extracted_river_water <-
 scen1_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen1_extracted_river_water[x]))
-# extracted water is often less than the extracted water under the EFLOW intervention
 scen2_water_shortfall <-
   sapply(1:12, function (x)
     max(0, irrigation_water_need[x] - scen2_extracted_river_water[x])) 
@@ -743,7 +745,7 @@ ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
 
 Here we calculate the Expected Value of Perfect Information (EVPI) using the `multi_EVPI` function in the `decisionSupport` package. The results show that there would be little additional value in the knowledge gained by gathering further knowledge on any of the variables that were included in the analysis.
 
-```{r, warning = F}
+```{r evpi_general, warning = F}
 # to ensure a clear process (not overwriting the original data) 
 # rename the simulations results
 simulations_evpi_data <- mcSimulation_results
@@ -759,15 +761,17 @@ results_evpi <- multi_EVPI(mc = simulations_evpi_data_table,
 
 The EVPI summary statistics for the mean crop water gap difference between the baseline UNRES and EFLOW scenarios. 
 
-```{r evpi_summary_EVPI, warning=F}
+```{r evpi_summary_EVPI_2vs1, warning=F}
 summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 ```
 
 The EVPI summary statistics for the mean crop water gap difference between the baseline UNRES and SUPPL scenarios.
 
-```{r evpi_summary_SUPPL, warning=F}
+```{r evpi_summary_SUPPL_3vs1, warning=F}
 summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
 ```
+
+There are no variables with a positive EVPI. 
 
 ## Estimate values
  
