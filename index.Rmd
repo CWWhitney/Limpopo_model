@@ -123,7 +123,7 @@ effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
 effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 
 # Compute crop water needs based on ET0 ####
-# Based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
+# ET0 is the baseline evapotranspiration, based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
 ET0 <- sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
 # To get from ET0 to crop water use, we need to multiply ET0 with a crop coefficient (kc), which is estimated for each month.
 kc <- sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
@@ -379,6 +379,7 @@ mcSimulation_results <-
                            "UTF-8-BOM"),
     model_function = limpopo_decision_function,
     numberOfModelRuns = 1e2, #run 100 times (2900 with 100 simulations of 29 scenarios)
+# Partners in SA are the source of local data ####
     functionSyntax = "plainNames"
   )
 
