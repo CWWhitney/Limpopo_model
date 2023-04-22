@@ -577,7 +577,7 @@ Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_obje
 
 releases_simulations <- mcSimulation_results
 
-Fig_7_required_dam_release <- plot_cashflow(mcSimulation_object = releases_simulations, 
+Fig_required_dam_release <- plot_cashflow(mcSimulation_object = releases_simulations, 
               cashflow_var_name = "scen3_dam_release",
               y_axis_name = "a",
               x_axis_name = "Month", 
@@ -586,7 +586,7 @@ Fig_7_required_dam_release <- plot_cashflow(mcSimulation_object = releases_simul
 
 library(patchwork)
 
-  Fig_7_required_dam_release +
+  Fig_required_dam_release +
   plot_layout(ncol = 1, guides = "collect")  
   
 ggsave("figures/Fig_7_dam_release.png", width=7, height=5)

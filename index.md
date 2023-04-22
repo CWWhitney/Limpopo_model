@@ -13,10 +13,10 @@ includes collaborative model development (C. Whitney, Shepherd, and
 Luedeling 2018) to assess farming futures given e-flow forecasts under
 different management options. To build these simulations we use
 functions from the `decisionSupport` (Luedeling et al. 2022), `dplyr`
-(Wickham, François, et al. 2022), `nasapower` (Sparks 2022), `patchwork`
-(Pedersen 2020), `tidyverse` (Wickham 2022b) and `Evapotranspiration`
+(Wickham, François, et al. 2023), `nasapower` (Sparks 2023), `patchwork`
+(Pedersen 2022), `tidyverse` (Wickham 2023) and `Evapotranspiration`
 (Guo, Westra, and Peterson 2022) libraries in the R programming language
-(R Core Team 2022).
+(R Core Team 2023).
 
 ## The model
 
@@ -102,7 +102,7 @@ The following function defines 3 scenarios:
     eflows aren’t achieved, water extraction is curtailed. There are no
     measures to add water to the river in such events. We simulate this
     scenario with our own functions and some from the `nasapower`
-    (Sparks 2022) and `Evapotranspiration` (Guo, Westra, and
+    (Sparks 2023) and `Evapotranspiration` (Guo, Westra, and
     Peterson 2022) packages.
 3.  SUPPL – E-flows achieved through abstraction control and dam
     releases: This is an eflow scenario, in which eflows are interpreted
@@ -125,9 +125,9 @@ as the Net Present Value.
 
 In the following we use of various decisionSupport functions, which use
 the `tidyverse` libraries (Wickham et al. 2019) including `ggplot2`
-(Wickham, Chang, et al. 2022), `plyr` (Wickham 2022a) and `dplyr`
-(Wickham, François, et al. 2022) among others in the [R programming
-language](https://www.r-project.org/) (R Core Team 2022).
+(Wickham, Chang, et al. 2023), `plyr` (Wickham 2022) and `dplyr`
+(Wickham, François, et al. 2023) among others in the [R programming
+language](https://www.r-project.org/) (R Core Team 2023).
 
 Here we generate a model as a function using `decisionSupport` library
 we use the `decisionSupport` functions `vv()` to produce time series
@@ -151,7 +151,7 @@ effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
 effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
 
 # Compute crop water needs based on ET0 ####
-# Based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
+# ET0 is the baseline evapotranspiration, based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
 ET0 <- sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
 # To get from ET0 to crop water use, we need to multiply ET0 with a crop coefficient (kc), which is estimated for each month.
 kc <- sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
@@ -434,6 +434,7 @@ mcSimulation_results <-
                            "UTF-8-BOM"),
     model_function = limpopo_decision_function,
     numberOfModelRuns = 1e2, #run 100 times (2900 with 100 simulations of 29 scenarios)
+# Partners in SA are the source of local data ####
     functionSyntax = "plainNames"
   )
 
@@ -758,9 +759,9 @@ There are no variables with a positive EVPI.
 This table contains the estimate values used for the Monte Carlo
 analysis
 
-This document was generated using the `rmarkdown` (Allaire et al. 2022)
-and `knitr` (Xie 2022) packages in the R programming language (R Core
-Team 2022).
+This document was generated using the `rmarkdown` (Allaire et al. 2023)
+and `knitr` (Xie 2023) packages in the R programming language (R Core
+Team 2023).
 
 ## References
 
@@ -768,10 +769,9 @@ Team 2022).
 
 <div id="ref-R-rmarkdown" class="csl-entry">
 
-Allaire, JJ, Yihui Xie, Jonathan McPherson, Javier Luraschi, Kevin
-Ushey, Aron Atkins, Hadley Wickham, Joe Cheng, Winston Chang, and
-Richard Iannone. 2022. *Rmarkdown: Dynamic Documents for r*.
-<https://CRAN.R-project.org/package=rmarkdown>.
+Allaire, JJ, Yihui Xie, Christophe Dervieux, Jonathan McPherson, Javier
+Luraschi, Kevin Ushey, Aron Atkins, et al. 2023. *Rmarkdown: Dynamic
+Documents for r*. <https://CRAN.R-project.org/package=rmarkdown>.
 
 </div>
 
@@ -812,14 +812,14 @@ Decision Making Under Uncertainty*. <http://www.worldagroforestry.org/>.
 
 <div id="ref-R-patchwork" class="csl-entry">
 
-Pedersen, Thomas Lin. 2020. *Patchwork: The Composer of Plots*.
+Pedersen, Thomas Lin. 2022. *Patchwork: The Composer of Plots*.
 <https://CRAN.R-project.org/package=patchwork>.
 
 </div>
 
 <div id="ref-R-base" class="csl-entry">
 
-R Core Team. 2022. *R: A Language and Environment for Statistical
+R Core Team. 2023. *R: A Language and Environment for Statistical
 Computing*. Vienna, Austria: R Foundation for Statistical Computing.
 <https://www.R-project.org/>.
 
@@ -827,7 +827,7 @@ Computing*. Vienna, Austria: R Foundation for Statistical Computing.
 
 <div id="ref-R-nasapower" class="csl-entry">
 
-Sparks, Adam H. 2022. *Nasapower: NASA POWER API Client*.
+Sparks, Adam H. 2023. *Nasapower: NASA POWER API Client*.
 <https://docs.ropensci.org/nasapower/>.
 
 </div>
@@ -852,14 +852,14 @@ Methods Guide; Agricultural Policy for Nutrition.” *World Agroforestry
 
 <div id="ref-R-plyr" class="csl-entry">
 
-Wickham, Hadley. 2022a. *Plyr: Tools for Splitting, Applying and
+Wickham, Hadley. 2022. *Plyr: Tools for Splitting, Applying and
 Combining Data*. <https://CRAN.R-project.org/package=plyr>.
 
 </div>
 
 <div id="ref-R-tidyverse" class="csl-entry">
 
-———. 2022b. *Tidyverse: Easily Install and Load the Tidyverse*.
+———. 2023. *Tidyverse: Easily Install and Load the Tidyverse*.
 <https://CRAN.R-project.org/package=tidyverse>.
 
 </div>
@@ -877,15 +877,15 @@ Source Software* 4 (43): 1686. <https://doi.org/10.21105/joss.01686>.
 
 Wickham, Hadley, Winston Chang, Lionel Henry, Thomas Lin Pedersen,
 Kohske Takahashi, Claus Wilke, Kara Woo, Hiroaki Yutani, and Dewey
-Dunnington. 2022. *Ggplot2: Create Elegant Data Visualisations Using the
+Dunnington. 2023. *Ggplot2: Create Elegant Data Visualisations Using the
 Grammar of Graphics*. <https://CRAN.R-project.org/package=ggplot2>.
 
 </div>
 
 <div id="ref-R-dplyr" class="csl-entry">
 
-Wickham, Hadley, Romain François, Lionel Henry, and Kirill Müller. 2022.
-*Dplyr: A Grammar of Data Manipulation*.
+Wickham, Hadley, Romain François, Lionel Henry, Kirill Müller, and Davis
+Vaughan. 2023. *Dplyr: A Grammar of Data Manipulation*.
 <https://CRAN.R-project.org/package=dplyr>.
 
 </div>
@@ -901,7 +901,7 @@ Intelligent Laboratory Systems*, PLS Methods, 58 (2): 109–30.
 
 <div id="ref-R-knitr" class="csl-entry">
 
-Xie, Yihui. 2022. *Knitr: A General-Purpose Package for Dynamic Report
+Xie, Yihui. 2023. *Knitr: A General-Purpose Package for Dynamic Report
 Generation in r*. <https://yihui.org/knitr/>.
 
 </div>
