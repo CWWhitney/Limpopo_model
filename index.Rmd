@@ -323,7 +323,8 @@ scenario_variables <-
 
 Scenarios <- data.frame(Variable = scenario_variables, param = "both")
 
-eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv",fileEncoding="UTF-8-BOM")
+eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv", fileEncoding = "UTF-8-BOM")
+
 eflowsort <-
   eflows[, c(1, order(unlist(sapply(colnames(eflows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
@@ -331,14 +332,15 @@ eflow_exceedance<-eflowsort[which(eflowsort$Exceedence == 80),]
 eflow_per_month<-eflow_exceedance[2:13]*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24
 
 # read data of present data 
-present_flows<-read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
+present_flows <- read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv", fileEncoding = "UTF-8-BOM")
 presentflowsort <-
   present_flows[, c(1, order(unlist(sapply(colnames(present_flows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
 presentflow_permonth<-data.frame(cbind(presentflowsort[,1],t(t(presentflowsort[,2:13])*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24)))
-colnames(presentflow_permonth)[1]<-"Year"
 
-# The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar year of this period.
+colnames(presentflow_permonth)[1] <- "Year"
+
+# The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar date of this period.
 
 presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <- 
   presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
