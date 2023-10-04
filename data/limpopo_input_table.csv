@@ -3,14 +3,16 @@ Precipitation in month 1 in mm,prec_1,posnorm,45,135,Precipitation in January in
 Precipitation in month 2 in mm,prec_2,posnorm,31,93,Precipitation in February in mm
 Precipitation in month 3 in mm,prec_3,posnorm,25,75,Precipitation in March in mm
 Precipitation in month 4 in mm,prec_4,posnorm,12.5,37.5,Precipitation in April in mm
-Precipitation in month 5 in mm,prec_5,posnorm,5,15,Precipitation in May in mm
-Precipitation in month 6 in mm,prec_6,posnorm,1,3,Precipitation in June in mm
-Precipitation in month 7 in mm,prec_7,posnorm,2,6,Precipitation in July in mm
-Precipitation in month 8 in mm,prec_8,posnorm,3,9,Precipitation in August in mm
-Precipitation in month 9 in mm,prec_9,posnorm,7,21,Precipitation in September in mm
-Precipitation in month 10 in mm,prec_10,posnorm,12.5,37.5,Precipitation in October in mm
-Precipitation in month 11 in mm,prec_11,posnorm,35,105,Precipitation in November in mm
+Precipitation in month 5 in mm,prec_5,posnorm,12.5,37.5,Precipitation in May in mm
+Precipitation in month 6 in mm,prec_6,posnorm,35,105,Precipitation in June in mm
+Precipitation in month 7 in mm,prec_7,posnorm,3,9,Precipitation in July in mm
+Precipitation in month 8 in mm,prec_8,posnorm,2,6,Precipitation in August in mm
+Precipitation in month 9 in mm,prec_9,posnorm,1,3,Precipitation in September in mm
+Precipitation in month 10 in mm,prec_10,posnorm,5,15,Precipitation in October in mm
+Precipitation in month 11 in mm,prec_11,posnorm,7,21,Precipitation in November in mm
 Precipitation in month 12 in mm,prec_12,posnorm,45,135,Precipitation in December in mm
+,,,,,
+,,,,,
 ,,,,,
 Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package),ET0_1,posnorm,144,240,Ref. evapotranspiration in January
 Reference evapotranspiration (ET0) mm/per ha month 2,ET0_2,posnorm,114.75,191.25,Ref. evapotranspiration in February
