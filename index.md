@@ -113,9 +113,13 @@ The following function defines 3 scenarios:
 
 ### The conceptual model
 
-![Model of the social effects of altered river flows on the
-sustainability of livelihoods in the Limpopo
-Basin](figures/Fig_2_Collective_Model.png)
+<figure>
+<img src="figures/Fig_2_Collective_Model.png"
+alt="Model of the social effects of altered river flows on the sustainability of livelihoods in the Limpopo Basin" />
+<figcaption aria-hidden="true">Model of the social effects of altered
+river flows on the sustainability of livelihoods in the Limpopo
+Basin</figcaption>
+</figure>
 
 ### The `model_function`
 
@@ -375,7 +379,8 @@ scenario_variables <-
 
 Scenarios <- data.frame(Variable = scenario_variables, param = "both")
 
-eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv",fileEncoding="UTF-8-BOM")
+eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv", fileEncoding = "UTF-8-BOM")
+
 eflowsort <-
   eflows[, c(1, order(unlist(sapply(colnames(eflows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
@@ -383,14 +388,15 @@ eflow_exceedance<-eflowsort[which(eflowsort$Exceedence == 80),]
 eflow_per_month<-eflow_exceedance[2:13]*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24
 
 # read data of present data 
-present_flows<-read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
+present_flows <- read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv", fileEncoding = "UTF-8-BOM")
 presentflowsort <-
   present_flows[, c(1, order(unlist(sapply(colnames(present_flows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
 presentflow_permonth<-data.frame(cbind(presentflowsort[,1],t(t(presentflowsort[,2:13])*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24)))
-colnames(presentflow_permonth)[1]<-"Year"
 
-# The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar year of this period.
+colnames(presentflow_permonth)[1] <- "Year"
+
+# The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar date of this period.
 
 presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <- 
   presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
@@ -415,9 +421,6 @@ for (yyyy in years)
 
 # natural flows (this is for information and not used in the model)
 natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
-
-# write the scenarios file
-write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
 ```
 
 Here we run the model with the `scenario_mc` function from the
@@ -629,10 +632,10 @@ between the baseline UNRES and EFLOW scenarios.
 ``` r
 summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 #>    variable         expected_gain        EVPI_do    EVPI_dont            EVPI  
-#>  Length:71          Min.   :0.01862   Min.   :0   Min.   :0.00000   Min.   :0  
+#>  Length:71          Min.   :0.01897   Min.   :0   Min.   :0.00000   Min.   :0  
 #>  Class :character   1st Qu.:0.08705   1st Qu.:0   1st Qu.:0.06397   1st Qu.:0  
 #>  Mode  :character   Median :0.11872   Median :0   Median :0.10968   Median :0  
-#>                     Mean   :0.10488   Mean   :0   Mean   :0.08715   Mean   :0  
+#>                     Mean   :0.10493   Mean   :0   Mean   :0.08720   Mean   :0  
 #>                     3rd Qu.:0.12458   3rd Qu.:0   3rd Qu.:0.12435   3rd Qu.:0  
 #>                     Max.   :0.17034   Max.   :0   Max.   :0.17034   Max.   :0  
 #>                     NA's   :12                                                 
@@ -653,9 +656,9 @@ between the baseline UNRES and SUPPL scenarios.
 summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
 #>    variable         expected_gain         EVPI_do         EVPI_dont      EVPI  
 #>  Length:71          Min.   :-0.41267   Min.   :0.0000   Min.   :0   Min.   :0  
-#>  Class :character   1st Qu.:-0.39056   1st Qu.:0.1394   1st Qu.:0   1st Qu.:0  
-#>  Mode  :character   Median :-0.37450   Median :0.3387   Median :0   Median :0  
-#>                     Mean   :-0.31421   Mean   :0.2611   Mean   :0   Mean   :0  
+#>  Class :character   1st Qu.:-0.39056   1st Qu.:0.1393   1st Qu.:0   1st Qu.:0  
+#>  Mode  :character   Median :-0.37561   Median :0.3422   Median :0   Median :0  
+#>                     Mean   :-0.31431   Mean   :0.2612   Mean   :0   Mean   :0  
 #>                     3rd Qu.:-0.26694   3rd Qu.:0.3901   3rd Qu.:0   3rd Qu.:0  
 #>                     Max.   :-0.04822   Max.   :0.4127   Max.   :0   Max.   :0  
 #>                     NA's   :12                                                 
@@ -717,12 +720,12 @@ There are no variables with a positive EVPI.
 | Effective rainfall - minimum threshold                                                                                                                    | effprec_low                       | posnorm      |        5.00 |       10.00 | Effective rainfall - minimum threshold |
 | Effective rainfall - maximum threshold                                                                                                                    | effprec_high                      | posnorm      |       90.00 |      200.00 | Effective rainfall - maximum threshold |
 |                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
-| Efficiency of water pumps                                                                                                                                 | effi_pump                         | tnorm_0\_1   |        0.70 |        0.90 | Efficiency of the water pumps          |
-| Efficiency of irrigation scheduling and allocation                                                                                                        | effi_sched                        | tnorm_0\_1   |        0.60 |        0.90 | Efficiency of irrigation scheduling    |
+| Efficiency of water pumps                                                                                                                                 | effi_pump                         | tnorm_0_1    |        0.70 |        0.90 | Efficiency of the water pumps          |
+| Efficiency of irrigation scheduling and allocation                                                                                                        | effi_sched                        | tnorm_0_1    |        0.60 |        0.90 | Efficiency of irrigation scheduling    |
 | Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).                                                | var_CV                            | posnorm      |        5.00 |       20.00 | var_CV                                 |
 |                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
 | Total irrigable area                                                                                                                                      | available_area                    | posnorm      |      100.00 |      300.00 | Available area                         |
-| Share of land that is not used because of socio-political obstacles                                                                                       | unused_sociopolit                 | tnorm_0\_1   |        0.20 |        0.40 | Share of unused lands                  |
+| Share of land that is not used because of socio-political obstacles                                                                                       | unused_sociopolit                 | tnorm_0_1    |        0.20 |        0.40 | Share of unused lands                  |
 | Number of subsistence households                                                                                                                          | n_subsistence_farmers             | posnorm      |       30.00 |      200.00 | Number of subsistence farmers          |
 | Farm size per subsistence households                                                                                                                      | necessary_farm_size_per_household | posnorm      |        1.50 |        2.50 | Needed farm size per household         |
 |                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
