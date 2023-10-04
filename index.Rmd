@@ -55,14 +55,14 @@ knitr::write_bib(c(.packages(),
 
 ## The model
 
-Decision-makers often wish to have a quantitative basis for their decisions. However,‘hard data’ is often missing or unattainable for many important variables, which can paralyze the decision-making processes or lead decision-makers to conclude that large research efforts are needed before a decision can be made. That is, many variables decision makers must consider cannot be precisely quantified, at least not without unreasonable effort. The major objective of (prescriptive) decision analysis is to support decision-making processes where decision makers are faced with this problem. Following the principles of Decision Analysis can allow us to make forecasts of decision outcomes without precise numbers, as long as probability distributions describing the possible values for all variables can be estimated. 
+Decision-makers often wish to have a quantitative basis for their decisions. However,‘hard data’ is often missing or unattainable for many important variables, which can paralyze the decision-making processes or lead decision-makers to conclude that large research efforts are needed before a decision can be made. That is, many variables that decision makers must consider cannot be precisely quantified, at least not without unreasonable effort. The major objective of (prescriptive) decision analysis is to support decision-making processes where decision makers are faced with this problem. Following the principles of Decision Analysis can allow us to make forecasts of decision outcomes without precise numbers, as long as probability distributions describing the possible values for all variables can be estimated. 
 
 The `decisionSupport` package implements this as a Monte Carlo simulation, which generates a large number of plausible system outcomes, based on random numbers for each input variable that are drawn from user-specified probability distributions. This approach is useful for determining whether a clearly preferable course of action can be delineated based on the present state of knowledge without the need for further information. If the distribution of predicted system outcomes does not imply a clearly preferable decision option, variables identified as carrying decision-relevant uncertainty can then be targeted by decision-supporting research.
 
 The `mcSimulation` function from the `decisionSupport` package can be applied to conduct decision analysis [@R-decisionSupport]. The function requires three inputs:
 
 1. an `estimate` of the joint probability distribution of the input variables. These specify the names and probability distributions for all variables used in the decision model. These distributions aim to represent the full range of possible values for each component of the model. 
-1. a `model_function` that predicts decision outcomes based on the variables named in a separate data table. This R function is customized by the user to address a particular decision problem to provide the decision analysis model.  
+1. a `model_function` that predicts decision outcomes based on the variables named in a separate data table. This R function is customized by the user to address a particular decision problem to provide the decision analysis model.
 1. `numberOfModelRuns`	indicating the number of times to run the model function.
 
 These inputs are provided as arguments to the `mcSimulation` function, which conducts a Monte Carlo analysis with repeated model runs based on probability distributions for all uncertain variables. The data table and model are customized to fit the particulars of a specific decision.
@@ -94,14 +94,14 @@ The following function defines 3 scenarios:
 
 The decision model is coded as an R function which takes in the variables provided in the data table and generates a model output, such as the Net Present Value. 
 
-In the following we use of various decisionSupport functions, which use the `tidyverse` libraries [@tidyverse2019] including `ggplot2` [@R-ggplot2], `plyr` [@R-plyr] and `dplyr` [@R-dplyr] among others in the [R programming language](https://www.r-project.org/) [@R-base]. 
+In the following we use of various `decisionSupport` functions, which use the `tidyverse` libraries [@tidyverse2019] including `ggplot2` [@R-ggplot2], `plyr` [@R-plyr] and `dplyr` [@R-dplyr] among others in the [R programming language](https://www.r-project.org/) [@R-base]. 
 
 Here we generate a model as a function using `decisionSupport` library we use the `decisionSupport` functions `vv()` to produce time series with variation from a pre-defined mean and coefficient of variation, `chance_event()` to simulate whether events occur and `discount()` to discount values along a time series and generate a Net Present Value for our intervention comparison.
-
 
 ```{r make_variables, warning=F, include=F}
 input_table <- "data/limpopo_input_table.csv"
 
+# a function to generate a single-run, line-by-line test the model (not part of the final model run)
 make_variables <- function(est,n=1){ x <- random(rho=est, n=n)
 for(i in colnames(x)) assign(i, as.numeric(x[1,i]),envir=.GlobalEnv)}
 
@@ -117,10 +117,11 @@ limpopo_decision_function <- function(x, varnames){
 # generating boundary conditions for the simulation run ####
 
 # simulate how much rainwater is available in mm ####
-rainfall<-sapply(1:12,function(x) eval(parse(text=paste0("prec_",x))))
+rainfall<-sapply(1:12,function(x) eval(parse(text=paste0("prec_",x)))) 
+# lowest in the dry season between July and November
 
-effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
-effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
+effective_rain<-sapply(rainfall,function(x) min(x,effprec_high))
+effective_rainfall<-sapply(effective_rain,function(x) max(x,effprec_low))
 
 # Compute crop water needs based on ET0 ####
 # ET0 is the baseline evapotranspiration, based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
@@ -154,10 +155,10 @@ farmed_area <- min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
 
 # Calculating the total annual crop water need m3/ha ####
 total_cropwater_need <- cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
-total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall
+total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall per year
 
 # Calculating the total annual irrigation need m3/ha ####
-total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha
+total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha per year
 # sum(total_irrigation_need/farmed_area) is around 8600 m3/ha, very close to the reported values across the literature in Limpopo
 # Calculating the annual water losses in m3/ha ####
 # from the efficiency of the pumps and in the water allocation 
@@ -263,18 +264,20 @@ Using the model function above, we can perform a Monte Carlo simulation with the
 
 The `numberOfModelRuns` argument is an integer indicating the number of model runs for the Monte Carlo simulation. Unless the model function is very complex, 10,000 runs is a reasonable choice (for complex models, 10,000 model runs can take a while, so especially when the model is still under development, it often makes sense to use a lower number).
 
-We first make a scenario file, for which we can use data for 1980 to 2020.
+We first make a scenario file, for which we use evapotranspiration data for 1980 to 2009.
 
 ```{r scenarios, warning=F}
 # load data from Evapotranspiration
 data("constants")
 
-# use nasapower for evapotranspiration data
+# get global meteorology and surface solar energy climatology data
 ag_d <- get_power(
   community = "ag",
-  lonlat = c(31.08,-23.7), #Letaba region
+# Corrdinates of the Letaba region
+  lonlat = c(31.08,-23.7), 
   pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
   dates = c("1981-01-01", "2020-12-31"),
+# Temporal API end-point for data being queried
   temporal_api = "daily"
 )
 
@@ -285,9 +288,10 @@ years <- 1981:2009
 colnames(ag_d)[c(3:5, 8, 9, 10)] <-
   c("Year", "Month", "Day", "Tmax", "Tmin", "Precipitation")
 
+# Load raw date and climate data with Evapotranspiration
 Inputs <- ReadInputs(c("Tmin", "Tmax"), ag_d, stopmissing = c(50, 50, 50))
 
-# apply ET.HargreavesSamani from the Evapotranspiration library
+# Implementing the Hargreaves-Samani formulation for estimating reference crop evapotranspiration
 ET <-
   ET.HargreavesSamani(
     Inputs,
@@ -298,7 +302,9 @@ ET <-
     save.csv = "no"
   )
 
+# create data frame with years <- 1981:2009
 ETdata <- data.frame(year = years)
+# three-letter abbreviations for the English month names
 ETdata[, month.abb[1:12]] <- NA
 for (yyyy in years)
   ETdata[which(ETdata$year == yyyy), 2:13] <-
@@ -328,7 +334,9 @@ eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv", fileEncoding = "U
 eflowsort <-
   eflows[, c(1, order(unlist(sapply(colnames(eflows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
+
 eflow_exceedance<-eflowsort[which(eflowsort$Exceedence == 80),]
+
 eflow_per_month<-eflow_exceedance[2:13]*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24
 
 # read data of present data 
@@ -340,12 +348,10 @@ presentflow_permonth<-data.frame(cbind(presentflowsort[,1],t(t(presentflowsort[,
 
 colnames(presentflow_permonth)[1] <- "Year"
 
-# The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar date of this period.
-
-presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <- 
-  presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
-
-presentflow_permonth[1,month.abb[1:9]]<-NA
+# The hydrological year in the input file starts in October and runs until September. We've reformatted in the file
+# presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <-
+#   presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
+# presentflow_permonth[1,month.abb[1:9]]<-NA
 
 for (yyyy in years)
 {
@@ -364,10 +370,8 @@ for (yyyy in years)
 }
 
 # natural flows (this is for information and not used in the model)
-natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
+natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv", fileEncoding="UTF-8-BOM")
 
-# write the scenarios file
-write.csv(Scenarios, "data/scenarios_1980_2020.csv", row.names = FALSE)
 ```
 
 Here we run the model with the `scenario_mc` function from the `decisionSupport` package [@R-decisionSupport]. The function essentially generates a Monte Carlo model with data from existing scenarios for some of the model inputs.
@@ -434,7 +438,7 @@ Fig_total_annual_crop_water_irrigation_need +
                   top = 0.97) + 
   plot_annotation(title = "Annual crop water need")
 
-
+# Create a figure to describe the annual crop water needs
 ggsave("figures/Fig_3_water_needs.png", width=10, height=5)
 
 
