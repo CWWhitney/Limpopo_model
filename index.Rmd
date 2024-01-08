@@ -1,13 +1,13 @@
 ---
 title: "Modeling the contribution of e-flows to sustainable agriculture, food security and livelihoods in South Africa's Limpopo basin"
-author: "Eike Luedeling, Cory Whitney"
+author: "Cory Whitney, Gordon O'Brien, Vuyisile Dlamini, Ikhothatseng Jacob Greffiths, Chris Dickens, Eike Luedeling"
 output: github_document
 bibliography:
  - packages.bib
  - references.bib 
 ---
 
-We generate a holistic model to simulate the contribution of e-flows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given e-flow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` [@R-Evapotranspiration] libraries in the R programming language [@R-base].
+We generate a holistic model to simulate the contribution of e-flows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given e-flow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` libraries in the R programming language [@R-base].
 
 ```{r load_basics, warning = F, include = F}
 #set global options for knitr chunks 
@@ -19,7 +19,8 @@ knitr::opts_chunk$set(
 
 #The set.seed() function in R is used to create reproducible results when writing code that involves creating variables that take on random values. By using the set. seed() function, we guarantee that the same random values are produced each time we run the code
 
-set.seed(424242)
+# setting seed at 81 for the GLET-B81J-LRANC gauge at our e-flow site
+set.seed(81)
 
 # Load the necessary libraries 
 # devtools::install_github("eikeluedeling/decisionSupport")

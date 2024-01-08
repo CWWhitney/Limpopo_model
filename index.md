@@ -1,7 +1,8 @@
 Modeling the contribution of e-flows to sustainable agriculture, food
 security and livelihoods in South Africa’s Limpopo basin
 ================
-Eike Luedeling, Cory Whitney
+Cory Whitney, Gordon O’Brien, Vuyisile Dlamini, Ikhothatseng Jacob
+Greffiths, Chris Dickens, Eike Luedeling
 
 We generate a holistic model to simulate the contribution of e-flows to
 sustainable agriculture, food security and livelihoods. Spatially, we do
@@ -12,11 +13,11 @@ and Whitney 2020; Lanzanova et al. 2019; Cory Whitney et al. 2018). This
 includes collaborative model development (C. Whitney, Shepherd, and
 Luedeling 2018) to assess farming futures given e-flow forecasts under
 different management options. To build these simulations we use
-functions from the `decisionSupport` (Luedeling et al. 2022), `dplyr`
+functions from the `decisionSupport` (Luedeling et al. 2023), `dplyr`
 (Wickham, François, et al. 2023), `nasapower` (Sparks 2023), `patchwork`
-(Pedersen 2022), `tidyverse` (Wickham 2023) and `Evapotranspiration`
-(Guo, Westra, and Peterson 2022) libraries in the R programming language
-(R Core Team 2023).
+(Pedersen 2023), `tidyverse` (Wickham 2023b) and `Evapotranspiration`
+(**R-Evapotranspiration?**) libraries in the R programming language (R
+Core Team 2023).
 
 ## The model
 
@@ -24,11 +25,11 @@ Decision-makers often wish to have a quantitative basis for their
 decisions. However,‘hard data’ is often missing or unattainable for many
 important variables, which can paralyze the decision-making processes or
 lead decision-makers to conclude that large research efforts are needed
-before a decision can be made. That is, many variables decision makers
-must consider cannot be precisely quantified, at least not without
-unreasonable effort. The major objective of (prescriptive) decision
-analysis is to support decision-making processes where decision makers
-are faced with this problem. Following the principles of Decision
+before a decision can be made. That is, many variables that decision
+makers must consider cannot be precisely quantified, at least not
+without unreasonable effort. The major objective of (prescriptive)
+decision analysis is to support decision-making processes where decision
+makers are faced with this problem. Following the principles of Decision
 Analysis can allow us to make forecasts of decision outcomes without
 precise numbers, as long as probability distributions describing the
 possible values for all variables can be estimated.
@@ -45,7 +46,7 @@ identified as carrying decision-relevant uncertainty can then be
 targeted by decision-supporting research.
 
 The `mcSimulation` function from the `decisionSupport` package can be
-applied to conduct decision analysis (Luedeling et al. 2022). The
+applied to conduct decision analysis (Luedeling et al. 2023). The
 function requires three inputs:
 
 1.  an `estimate` of the joint probability distribution of the input
@@ -56,7 +57,7 @@ function requires three inputs:
 2.  a `model_function` that predicts decision outcomes based on the
     variables named in a separate data table. This R function is
     customized by the user to address a particular decision problem to
-    provide the decision analysis model.  
+    provide the decision analysis model.
 3.  `numberOfModelRuns` indicating the number of times to run the model
     function.
 
@@ -102,8 +103,8 @@ The following function defines 3 scenarios:
     eflows aren’t achieved, water extraction is curtailed. There are no
     measures to add water to the river in such events. We simulate this
     scenario with our own functions and some from the `nasapower`
-    (Sparks 2023) and `Evapotranspiration` (Guo, Westra, and
-    Peterson 2022) packages.
+    (Sparks 2023) and `Evapotranspiration` (**R-Evapotranspiration?**)
+    packages.
 3.  SUPPL – E-flows achieved through abstraction control and dam
     releases: This is an eflow scenario, in which eflows are interpreted
     as encompassing the ecological as well as the smallholder irrigation
@@ -127,9 +128,9 @@ The decision model is coded as an R function which takes in the
 variables provided in the data table and generates a model output, such
 as the Net Present Value.
 
-In the following we use of various decisionSupport functions, which use
-the `tidyverse` libraries (Wickham et al. 2019) including `ggplot2`
-(Wickham, Chang, et al. 2023), `plyr` (Wickham 2022) and `dplyr`
+In the following we use of various `decisionSupport` functions, which
+use the `tidyverse` libraries (Wickham et al. 2019) including `ggplot2`
+(Wickham, Chang, et al. 2023), `plyr` (Wickham 2023a) and `dplyr`
 (Wickham, François, et al. 2023) among others in the [R programming
 language](https://www.r-project.org/) (R Core Team 2023).
 
@@ -149,10 +150,11 @@ limpopo_decision_function <- function(x, varnames){
 # generating boundary conditions for the simulation run ####
 
 # simulate how much rainwater is available in mm ####
-rainfall<-sapply(1:12,function(x) eval(parse(text=paste0("prec_",x))))
+rainfall<-sapply(1:12,function(x) eval(parse(text=paste0("prec_",x)))) 
+# lowest in the dry season between July and November
 
-effective_rainfall<-sapply(rainfall,function(x) min(x,effprec_high))
-effective_rainfall<-sapply(effective_rainfall,function(x) max(x,effprec_low))
+effective_rain<-sapply(rainfall,function(x) min(x,effprec_high))
+effective_rainfall<-sapply(effective_rain,function(x) max(x,effprec_low))
 
 # Compute crop water needs based on ET0 ####
 # ET0 is the baseline evapotranspiration, based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
@@ -186,10 +188,10 @@ farmed_area <- min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
 
 # Calculating the total annual crop water need m3/ha ####
 total_cropwater_need <- cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
-total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall
+total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall per year
 
 # Calculating the total annual irrigation need m3/ha ####
-total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha
+total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha per year
 # sum(total_irrigation_need/farmed_area) is around 8600 m3/ha, very close to the reported values across the literature in Limpopo
 # Calculating the annual water losses in m3/ha ####
 # from the efficiency of the pumps and in the water allocation 
@@ -305,19 +307,21 @@ very complex, 10,000 runs is a reasonable choice (for complex models,
 10,000 model runs can take a while, so especially when the model is
 still under development, it often makes sense to use a lower number).
 
-We first make a scenario file, for which we can use data for 1980 to
-2020.
+We first make a scenario file, for which we use evapotranspiration data
+for 1980 to 2009.
 
 ``` r
 # load data from Evapotranspiration
 data("constants")
 
-# use nasapower for evapotranspiration data
+# get global meteorology and surface solar energy climatology data
 ag_d <- get_power(
   community = "ag",
-  lonlat = c(31.08,-23.7), #Letaba region
+# Corrdinates of the Letaba region
+  lonlat = c(31.08,-23.7), 
   pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
   dates = c("1981-01-01", "2020-12-31"),
+# Temporal API end-point for data being queried
   temporal_api = "daily"
 )
 
@@ -328,12 +332,13 @@ years <- 1981:2009
 colnames(ag_d)[c(3:5, 8, 9, 10)] <-
   c("Year", "Month", "Day", "Tmax", "Tmin", "Precipitation")
 
+# Load raw date and climate data with Evapotranspiration
 Inputs <- ReadInputs(c("Tmin", "Tmax"), ag_d, stopmissing = c(50, 50, 50))
 #> The maximum acceptable percentage of date indices is 50 %
 #> The maximum acceptable percentage of missing data is 50 %
 #> The maximum acceptable percentage of continuous missing data is 50 %
 
-# apply ET.HargreavesSamani from the Evapotranspiration library
+# Implementing the Hargreaves-Samani formulation for estimating reference crop evapotranspiration
 ET <-
   ET.HargreavesSamani(
     Inputs,
@@ -354,7 +359,9 @@ ET <-
 #> Max: 30.45
 #> Min: 1.35
 
+# create data frame with years <- 1981:2009
 ETdata <- data.frame(year = years)
+# three-letter abbreviations for the English month names
 ETdata[, month.abb[1:12]] <- NA
 for (yyyy in years)
   ETdata[which(ETdata$year == yyyy), 2:13] <-
@@ -384,7 +391,9 @@ eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv", fileEncoding = "U
 eflowsort <-
   eflows[, c(1, order(unlist(sapply(colnames(eflows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
+
 eflow_exceedance<-eflowsort[which(eflowsort$Exceedence == 80),]
+
 eflow_per_month<-eflow_exceedance[2:13]*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24
 
 # read data of present data 
@@ -396,12 +405,10 @@ presentflow_permonth<-data.frame(cbind(presentflowsort[,1],t(t(presentflowsort[,
 
 colnames(presentflow_permonth)[1] <- "Year"
 
-# The hydrological year in the input file starts in October and runs until September. We're assuming here that the year given for each year in the data sets provided corresponds to the first calendar date of this period.
-
-presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <- 
-  presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
-
-presentflow_permonth[1,month.abb[1:9]]<-NA
+# The hydrological year in the input file starts in October and runs until September. We've reformatted in the file
+# presentflow_permonth[2:nrow(presentflow_permonth), month.abb[1:9]] <-
+#   presentflow_permonth[1:(nrow(presentflow_permonth)-1), month.abb[1:9]]
+# presentflow_permonth[1,month.abb[1:9]]<-NA
 
 for (yyyy in years)
 {
@@ -420,11 +427,11 @@ for (yyyy in years)
 }
 
 # natural flows (this is for information and not used in the model)
-natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv",fileEncoding="UTF-8-BOM")
+natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv", fileEncoding="UTF-8-BOM")
 ```
 
 Here we run the model with the `scenario_mc` function from the
-`decisionSupport` package (Luedeling et al. 2022). The function
+`decisionSupport` package (Luedeling et al. 2023). The function
 essentially generates a Monte Carlo model with data from existing
 scenarios for some of the model inputs.
 
@@ -632,12 +639,12 @@ between the baseline UNRES and EFLOW scenarios.
 ``` r
 summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 #>    variable         expected_gain        EVPI_do    EVPI_dont            EVPI  
-#>  Length:71          Min.   :0.01897   Min.   :0   Min.   :0.00000   Min.   :0  
-#>  Class :character   1st Qu.:0.08705   1st Qu.:0   1st Qu.:0.06397   1st Qu.:0  
-#>  Mode  :character   Median :0.11872   Median :0   Median :0.10968   Median :0  
-#>                     Mean   :0.10493   Mean   :0   Mean   :0.08720   Mean   :0  
-#>                     3rd Qu.:0.12458   3rd Qu.:0   3rd Qu.:0.12435   3rd Qu.:0  
-#>                     Max.   :0.17034   Max.   :0   Max.   :0.17034   Max.   :0  
+#>  Length:71          Min.   :0.01654   Min.   :0   Min.   :0.00000   Min.   :0  
+#>  Class :character   1st Qu.:0.08604   1st Qu.:0   1st Qu.:0.06247   1st Qu.:0  
+#>  Mode  :character   Median :0.11693   Median :0   Median :0.11128   Median :0  
+#>                     Mean   :0.10459   Mean   :0   Mean   :0.08691   Mean   :0  
+#>                     3rd Qu.:0.12497   3rd Qu.:0   3rd Qu.:0.12485   3rd Qu.:0  
+#>                     Max.   :0.17009   Max.   :0   Max.   :0.17009   Max.   :0  
 #>                     NA's   :12                                                 
 #>    decision        
 #>  Length:71         
@@ -655,12 +662,12 @@ between the baseline UNRES and SUPPL scenarios.
 ``` r
 summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
 #>    variable         expected_gain         EVPI_do         EVPI_dont      EVPI  
-#>  Length:71          Min.   :-0.41267   Min.   :0.0000   Min.   :0   Min.   :0  
-#>  Class :character   1st Qu.:-0.39056   1st Qu.:0.1393   1st Qu.:0   1st Qu.:0  
-#>  Mode  :character   Median :-0.37561   Median :0.3422   Median :0   Median :0  
-#>                     Mean   :-0.31431   Mean   :0.2612   Mean   :0   Mean   :0  
-#>                     3rd Qu.:-0.26694   3rd Qu.:0.3901   3rd Qu.:0   3rd Qu.:0  
-#>                     Max.   :-0.04822   Max.   :0.4127   Max.   :0   Max.   :0  
+#>  Length:71          Min.   :-0.41450   Min.   :0.0000   Min.   :0   Min.   :0  
+#>  Class :character   1st Qu.:-0.39088   1st Qu.:0.1418   1st Qu.:0   1st Qu.:0  
+#>  Mode  :character   Median :-0.37520   Median :0.3425   Median :0   Median :0  
+#>                     Mean   :-0.31488   Mean   :0.2617   Mean   :0   Mean   :0  
+#>                     3rd Qu.:-0.26584   3rd Qu.:0.3904   3rd Qu.:0   3rd Qu.:0  
+#>                     Max.   :-0.04831   Max.   :0.4145   Max.   :0   Max.   :0  
 #>                     NA's   :12                                                 
 #>    decision        
 #>  Length:71         
@@ -682,14 +689,16 @@ There are no variables with a positive EVPI.
 | Precipitation in month 2 in mm                                                                                                                            | prec_2                            | posnorm      |       31.00 |       93.00 | Precipitation in February in mm        |
 | Precipitation in month 3 in mm                                                                                                                            | prec_3                            | posnorm      |       25.00 |       75.00 | Precipitation in March in mm           |
 | Precipitation in month 4 in mm                                                                                                                            | prec_4                            | posnorm      |       12.50 |       37.50 | Precipitation in April in mm           |
-| Precipitation in month 5 in mm                                                                                                                            | prec_5                            | posnorm      |        5.00 |       15.00 | Precipitation in May in mm             |
-| Precipitation in month 6 in mm                                                                                                                            | prec_6                            | posnorm      |        1.00 |        3.00 | Precipitation in June in mm            |
-| Precipitation in month 7 in mm                                                                                                                            | prec_7                            | posnorm      |        2.00 |        6.00 | Precipitation in July in mm            |
-| Precipitation in month 8 in mm                                                                                                                            | prec_8                            | posnorm      |        3.00 |        9.00 | Precipitation in August in mm          |
-| Precipitation in month 9 in mm                                                                                                                            | prec_9                            | posnorm      |        7.00 |       21.00 | Precipitation in September in mm       |
-| Precipitation in month 10 in mm                                                                                                                           | prec_10                           | posnorm      |       12.50 |       37.50 | Precipitation in October in mm         |
-| Precipitation in month 11 in mm                                                                                                                           | prec_11                           | posnorm      |       35.00 |      105.00 | Precipitation in November in mm        |
+| Precipitation in month 5 in mm                                                                                                                            | prec_5                            | posnorm      |       12.50 |       37.50 | Precipitation in May in mm             |
+| Precipitation in month 6 in mm                                                                                                                            | prec_6                            | posnorm      |       35.00 |      105.00 | Precipitation in June in mm            |
+| Precipitation in month 7 in mm                                                                                                                            | prec_7                            | posnorm      |        3.00 |        9.00 | Precipitation in July in mm            |
+| Precipitation in month 8 in mm                                                                                                                            | prec_8                            | posnorm      |        2.00 |        6.00 | Precipitation in August in mm          |
+| Precipitation in month 9 in mm                                                                                                                            | prec_9                            | posnorm      |        1.00 |        3.00 | Precipitation in September in mm       |
+| Precipitation in month 10 in mm                                                                                                                           | prec_10                           | posnorm      |        5.00 |       15.00 | Precipitation in October in mm         |
+| Precipitation in month 11 in mm                                                                                                                           | prec_11                           | posnorm      |        7.00 |       21.00 | Precipitation in November in mm        |
 | Precipitation in month 12 in mm                                                                                                                           | prec_12                           | posnorm      |       45.00 |      135.00 | Precipitation in December in mm        |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
+|                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
 |                                                                                                                                                           |                                   |              |          NA |          NA |                                        |
 | Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package)                                                  | ET0_1                             | posnorm      |      144.00 |      240.00 | Ref. evapotranspiration in January     |
 | Reference evapotranspiration (ET0) mm/per ha month 2                                                                                                      | ET0_2                             | posnorm      |      114.75 |      191.25 | Ref. evapotranspiration in February    |
@@ -768,13 +777,14 @@ Team 2023).
 
 ## References
 
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent"
+entry-spacing="0">
 
 <div id="ref-R-rmarkdown" class="csl-entry">
 
 Allaire, JJ, Yihui Xie, Christophe Dervieux, Jonathan McPherson, Javier
 Luraschi, Kevin Ushey, Aron Atkins, et al. 2023. *Rmarkdown: Dynamic
-Documents for r*. <https://CRAN.R-project.org/package=rmarkdown>.
+Documents for r*. <https://github.com/rstudio/rmarkdown>.
 
 </div>
 
@@ -784,14 +794,6 @@ Do, Hoa, Eike Luedeling, and Cory Whitney. 2020. “Decision Analysis of
 Agroforestry Options Reveals Adoption Risks for Resource-Poor Farmers.”
 *Agronomy for Sustainable Development* 40 (3): 20.
 <https://doi.org/10.1007/s13593-020-00624-5>.
-
-</div>
-
-<div id="ref-R-Evapotranspiration" class="csl-entry">
-
-Guo, Danlu, Seth Westra, and Tim Peterson. 2022. *Evapotranspiration:
-Modelling Actual, Potential and Reference Crop Evapotranspiration*.
-<https://CRAN.R-project.org/package=Evapotranspiration>.
 
 </div>
 
@@ -808,15 +810,15 @@ Software* 115 (May): 164–75.
 <div id="ref-R-decisionSupport" class="csl-entry">
 
 Luedeling, Eike, Lutz Goehring, Katja Schiffers, Cory Whitney, and
-Eduardo Fernandez. 2022. *decisionSupport: Quantitative Support of
+Eduardo Fernandez. 2023. *decisionSupport: Quantitative Support of
 Decision Making Under Uncertainty*. <http://www.worldagroforestry.org/>.
 
 </div>
 
 <div id="ref-R-patchwork" class="csl-entry">
 
-Pedersen, Thomas Lin. 2022. *Patchwork: The Composer of Plots*.
-<https://CRAN.R-project.org/package=patchwork>.
+Pedersen, Thomas Lin. 2023. *Patchwork: The Composer of Plots*.
+<https://patchwork.data-imaginist.com>.
 
 </div>
 
@@ -855,15 +857,15 @@ Methods Guide; Agricultural Policy for Nutrition.” *World Agroforestry
 
 <div id="ref-R-plyr" class="csl-entry">
 
-Wickham, Hadley. 2022. *Plyr: Tools for Splitting, Applying and
-Combining Data*. <https://CRAN.R-project.org/package=plyr>.
+Wickham, Hadley. 2023a. *Plyr: Tools for Splitting, Applying and
+Combining Data*. <http://had.co.nz/plyr>.
 
 </div>
 
 <div id="ref-R-tidyverse" class="csl-entry">
 
-———. 2023. *Tidyverse: Easily Install and Load the Tidyverse*.
-<https://CRAN.R-project.org/package=tidyverse>.
+———. 2023b. *Tidyverse: Easily Install and Load the Tidyverse*.
+<https://tidyverse.tidyverse.org>.
 
 </div>
 
@@ -881,7 +883,7 @@ Source Software* 4 (43): 1686. <https://doi.org/10.21105/joss.01686>.
 Wickham, Hadley, Winston Chang, Lionel Henry, Thomas Lin Pedersen,
 Kohske Takahashi, Claus Wilke, Kara Woo, Hiroaki Yutani, and Dewey
 Dunnington. 2023. *Ggplot2: Create Elegant Data Visualisations Using the
-Grammar of Graphics*. <https://CRAN.R-project.org/package=ggplot2>.
+Grammar of Graphics*. <https://ggplot2.tidyverse.org>.
 
 </div>
 
@@ -889,7 +891,7 @@ Grammar of Graphics*. <https://CRAN.R-project.org/package=ggplot2>.
 
 Wickham, Hadley, Romain François, Lionel Henry, Kirill Müller, and Davis
 Vaughan. 2023. *Dplyr: A Grammar of Data Manipulation*.
-<https://CRAN.R-project.org/package=dplyr>.
+<https://dplyr.tidyverse.org>.
 
 </div>
 
