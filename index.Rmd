@@ -460,47 +460,6 @@ Fig_monthly_baseline_crop_water_gap <-
           theme( axis.text.x = element_blank(),
           axis.ticks = element_blank())
 
-
-gap2_1_simulations <- mcSimulation_results 
-
-gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
-
-monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2_1_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
-              y_axis_name = "",
-              x_axis_name = "", 
-              facet_labels = "") + 
-  annotate(geom="text", x=3, y=77, 
-           label=expression(atop("% change EFLOW", 
-                                 paste("abstraction control")))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank()) + 
-  labs(y = "Monthly crop water gap for all e-flows scenarios")
-
-# flow of the differences for the plot
-gap3_1_simulations <- mcSimulation_results
-
-gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
-
-monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = gap3_1_simulations, 
-              cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
-              y_axis_name = "",
-              x_axis_name = "Month", 
-              facet_labels = "") + 
-  annotate(geom="text", x=3, y= -80, 
-            label=(expression(atop("% change SUPPL", 
-                                   paste("dam releases")))))
-
-
-library(patchwork)
-
-Fig_monthly_baseline_crop_water_gap +
-  monthly_crop_water_gap_environmental +
-  monthly_crop_water_gap_suppl +
-  plot_layout(ncol = 1, guides = "collect")  
-
-ggsave("figures/Fig_5_flows.png", width=7, height=10)
-
 ```
 
 ### Change in crop water gap
@@ -530,12 +489,49 @@ Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mc
 
 # Here are the impacts of e-flow policy on the crop water gap in each month (livelihoods focused, environmentally focused)
 
+# Monthly crop water gap
+
+gap2_1_simulations <- mcSimulation_results 
+
+gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+
+monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2_1_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
+              y_axis_name = "",
+              x_axis_name = "", 
+              facet_labels = "") + 
+  annotate(geom="text", x=3, y=77, 
+           label=expression(atop("% change EFLOW", 
+                                 paste("abstraction control")))) + 
+          theme( axis.text.x = element_blank(),
+          axis.ticks = element_blank()) + 
+  labs(y = "Monthly crop water gap")
+
+# flow of the differences for the plot
+gap3_1_simulations <- mcSimulation_results
+
+gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
+
+monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = gap3_1_simulations, 
+              cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
+              y_axis_name = "",
+              x_axis_name = "Month", 
+              facet_labels = "") + 
+  annotate(geom="text", x=3, y= -80, 
+            label=(expression(atop("% change SUPPL", 
+                                   paste("dam releases")))))
+
+
 library(patchwork)
 
- Fig_eflow_policy_effect_crop_water_gap + 
-   plot_layout(guides = "collect") + 
-   plot_annotation(title = "Crop water gap for all e-flows scenarios") &     
+  A <- monthly_crop_water_gap_environmental +
+  monthly_crop_water_gap_suppl +
+  plot_layout(ncol = 1, guides = "collect")  
+
+   B <- Fig_eflow_policy_effect_crop_water_gap  +     
                     ggplot2::theme(legend.position="bottom") 
+
+   A | B   + plot_layout(axis_titles = "collect", design = "AA\nBC")
 
 ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
 

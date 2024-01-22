@@ -16,8 +16,7 @@ different management options. To build these simulations we use
 functions from the `decisionSupport` (Luedeling et al. 2023), `dplyr`
 (Wickham, François, et al. 2023), `nasapower` (Sparks 2023), `patchwork`
 (Pedersen 2023), `tidyverse` (Wickham 2023b) and `Evapotranspiration`
-(**R-Evapotranspiration?**) libraries in the R programming language (R
-Core Team 2023).
+libraries in the R programming language (R Core Team 2023).
 
 ## The model
 
