@@ -14,9 +14,9 @@ includes collaborative model development (C. Whitney, Shepherd, and
 Luedeling 2018) to assess farming futures given e-flow forecasts under
 different management options. To build these simulations we use
 functions from the `decisionSupport` (Luedeling et al. 2023), `dplyr`
-(Wickham, François, et al. 2023), `nasapower` (Sparks 2023), `patchwork`
-(Pedersen 2023), `tidyverse` (Wickham 2023b) and `Evapotranspiration`
-libraries in the R programming language (R Core Team 2023).
+(Wickham et al. 2023), `nasapower` (Sparks 2023), `patchwork` (Pedersen
+2024), `tidyverse` (Wickham 2023b) and `Evapotranspiration` libraries in
+the R programming language (R Core Team 2023).
 
 ## The model
 
@@ -129,8 +129,8 @@ as the Net Present Value.
 
 In the following we use of various `decisionSupport` functions, which
 use the `tidyverse` libraries (Wickham et al. 2019) including `ggplot2`
-(Wickham, Chang, et al. 2023), `plyr` (Wickham 2023a) and `dplyr`
-(Wickham, François, et al. 2023) among others in the [R programming
+(Wickham et al. 2024), `plyr` (Wickham 2023a) and `dplyr` (Wickham et
+al. 2023) among others in the [R programming
 language](https://www.r-project.org/) (R Core Team 2023).
 
 Here we generate a model as a function using `decisionSupport` library
@@ -460,7 +460,7 @@ write.csv(mcSimulation_results, file = "data/mcSimulation_results.csv")
 
 ### Baseline vs scenarios results
 
-![](index_files/figure-gfm/plot_baseline_results-1.png)<!-- -->![](index_files/figure-gfm/plot_baseline_results-2.png)<!-- -->
+![](index_files/figure-gfm/plot_baseline_results-1.png)<!-- -->
 
 ### Change in crop water gap
 
@@ -776,8 +776,7 @@ Team 2023).
 
 ## References
 
-<div id="refs" class="references csl-bib-body hanging-indent"
-entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 
 <div id="ref-R-rmarkdown" class="csl-entry">
 
@@ -816,7 +815,7 @@ Decision Making Under Uncertainty*. <http://www.worldagroforestry.org/>.
 
 <div id="ref-R-patchwork" class="csl-entry">
 
-Pedersen, Thomas Lin. 2023. *Patchwork: The Composer of Plots*.
+Pedersen, Thomas Lin. 2024. *Patchwork: The Composer of Plots*.
 <https://patchwork.data-imaginist.com>.
 
 </div>
@@ -880,9 +879,10 @@ Source Software* 4 (43): 1686. <https://doi.org/10.21105/joss.01686>.
 <div id="ref-R-ggplot2" class="csl-entry">
 
 Wickham, Hadley, Winston Chang, Lionel Henry, Thomas Lin Pedersen,
-Kohske Takahashi, Claus Wilke, Kara Woo, Hiroaki Yutani, and Dewey
-Dunnington. 2023. *Ggplot2: Create Elegant Data Visualisations Using the
-Grammar of Graphics*. <https://ggplot2.tidyverse.org>.
+Kohske Takahashi, Claus Wilke, Kara Woo, Hiroaki Yutani, Dewey
+Dunnington, and Teun van den Brand. 2024. *Ggplot2: Create Elegant Data
+Visualisations Using the Grammar of Graphics*.
+<https://ggplot2.tidyverse.org>.
 
 </div>
 

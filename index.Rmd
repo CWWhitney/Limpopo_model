@@ -505,7 +505,7 @@ monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2
                                  paste("abstraction control")))) + 
           theme( axis.text.x = element_blank(),
           axis.ticks = element_blank()) + 
-  labs(y = "Monthly crop water gap")
+  labs(y = "Monthly crop water gap %")
 
 # flow of the differences for the plot
 gap3_1_simulations <- mcSimulation_results
