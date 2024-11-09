@@ -3,8 +3,8 @@ title: "Modeling the contribution of e-flows to sustainable agriculture, food se
 author: "Cory Whitney, Gordon O'Brien, Vuyisile Dlamini, Ikhothatseng Jacob Greffiths, Chris Dickens, Eike Luedeling"
 output: github_document
 bibliography:
- - packages.bib
- - references.bib 
+ - refs/packages.bib
+ - refs/references.bib 
 ---
 
 We generate a holistic model to simulate the contribution of e-flows to sustainable agriculture, food security and livelihoods. Spatially, we do this for only a small portion of the basin as a test-case. We apply holistic modeling approaches to generate conceptual impact pathways and quantitative models to forecast decision outcomes [see @do_decision_2020; @lanzanova_improving_2019; @whitney_probabilistic_2018]. This includes collaborative model development [@whitney_decision_2018-1] to assess farming futures given e-flow forecasts under different management options. To build these simulations we use functions from the `decisionSupport` [@R-decisionSupport], `dplyr` [@R-dplyr], `nasapower` [@R-nasapower], `patchwork` [@R-patchwork], `tidyverse` [@R-tidyverse] and `Evapotranspiration` libraries in the R programming language [@R-base].
@@ -50,7 +50,7 @@ knitr::write_bib(c(.packages(),
                    'nasapower',
                    'knitr',
                    'rmarkdown',
-                   'Evapotranspiration'), 'packages.bib')
+                   'Evapotranspiration'), 'refs/packages.bib')
 
 ```
 
@@ -97,9 +97,10 @@ The decision model is coded as an R function which takes in the variables provid
 
 In the following we use of various `decisionSupport` functions, which use the `tidyverse` libraries [@tidyverse2019] including `ggplot2` [@R-ggplot2], `plyr` [@R-plyr] and `dplyr` [@R-dplyr] among others in the [R programming language](https://www.r-project.org/) [@R-base]. 
 
-Here we generate a model as a function using `decisionSupport` library we use the `decisionSupport` functions `vv()` to produce time series with variation from a pre-defined mean and coefficient of variation, `chance_event()` to simulate whether events occur and `discount()` to discount values along a time series and generate a Net Present Value for our intervention comparison.
+Here we generate a model as a function using `decisionSupport` library we use the `decisionSupport` functions `vv()` to produce time series with variation from a pre-defined mean.
 
 ```{r make_variables, warning=F, include=F}
+
 input_table <- "data/limpopo_input_table.csv"
 
 # a function to generate a single-run, line-by-line test the model (not part of the final model run)
@@ -113,7 +114,10 @@ make_variables(estimate_read_csv(input_table))
 The following script contains the basic model we used to run the Monte Carlo.
 
 ```{r model, warning=F}
-limpopo_decision_function <- function(x, varnames){
+# load vv function
+source(file = "functions/vv.R")
+
+limpopo_decision_function <- function(x){
 
 # generating boundary conditions for the simulation run ####
 
@@ -142,9 +146,9 @@ pre_livestock_river_flow <- sapply(1:12,function(x) eval(parse(text=paste0("rive
 # Define e-flow for each month ####
 eflow <- sapply(1:12,function(x) eval(parse(text=paste0("eflow_",x)))) # in m3 / month
 
-# Calculating the water needed for watering livestock ####
+# Calculating the water needed for watering livestock m3 / month ####
 # assuming that this is more or less stable throughout the year, but varies a bit
-livestock_water_needs <- vv(livestock_water_need,var_CV,12)
+livestock_water_needs <- vv(livestock_water_need,var_CV,12) # m3 / month
 # assuming that the eflows aren't affecting ability to water livestock and that there's always enough water for all the livestock
 river_flow <- pre_livestock_river_flow-livestock_water_needs
 
@@ -161,18 +165,26 @@ total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective 
 # Calculating the total annual irrigation need m3/ha ####
 total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha per year
 # sum(total_irrigation_need/farmed_area) is around 8600 m3/ha, very close to the reported values across the literature in Limpopo
+
 # Calculating the annual water losses in m3/ha ####
 # from the efficiency of the pumps and in the water allocation 
+# Efficiency of pumps (efficiency_pumps) and efficiency of irrigation scheduling (efficiency_irrig_scheduling) are adjusted to ensure they remain between 0 and 1,
 efficiency_pumps <- vv(effi_pump,var_CV,12)
 efficiency_irrig_scheduling <- vv(effi_sched,var_CV,12)
 efficiency_pumps <- sapply(efficiency_pumps, function(x)  min(x,1))
 efficiency_pumps <- sapply(efficiency_pumps, function(x)  max(x,0))
 efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
 efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
-
+# # water_losses_share represents the share of water lost due to inefficiencies, calculated as 
+# 1 − ( efficiency_pumps × efficiency_irrig_scheduling )
+# 1−(efficiency_pumps×efficiency_irrig_scheduling). 
+# This results in higher irrigation water needs to compensate for these losses
 # around 50% efficiency
 water_losses_share <- (1-efficiency_pumps*efficiency_irrig_scheduling)
-
+#Adjusted Irrigation Water Need:
+# irrigation_water_need is calculated by dividing total_irrigation_need by the remaining efficient share 
+# ( 1 − water_losses_share )
+# (1−water_losses_share), effectively increasing the water required due to inefficiencies.
 irrigation_water_need <- total_irrigation_need/(1-water_losses_share) # m3/ha 
 # irrigation inefficiency doubles the irrigation need
 # sum(irrigation_water_need-total_irrigation_need)/farmed_area is around 6,886
@@ -345,6 +357,7 @@ present_flows <- read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv", fil
 presentflowsort <-
   present_flows[, c(1, order(unlist(sapply(colnames(present_flows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
+
 presentflow_permonth<-data.frame(cbind(presentflowsort[,1],t(t(presentflowsort[,2:13])*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24)))
 
 colnames(presentflow_permonth)[1] <- "Year"
