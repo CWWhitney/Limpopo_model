@@ -12,8 +12,6 @@ Precipitation in month 10 in mm,prec_10,posnorm,5,15,Precipitation in October in
 Precipitation in month 11 in mm,prec_11,posnorm,7,21,Precipitation in November in mm
 Precipitation in month 12 in mm,prec_12,posnorm,45,135,Precipitation in December in mm
 ,,,,,
-,,,,,
-,,,,,
 Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package),ET0_1,posnorm,144,240,Ref. evapotranspiration in January mm/per ha month
 Reference evapotranspiration (ET0) mm/per ha month 2,ET0_2,posnorm,114.75,191.25,Ref. evapotranspiration in February mm/per ha month
 Reference evapotranspiration (ET0) mm/per ha month 3,ET0_3,posnorm,96,160,Ref. evapotranspiration in March mm/per ha month
@@ -27,24 +25,24 @@ Reference evapotranspiration (ET0) mm/per ha month 10,ET0_10,posnorm,99.75,166.2
 Reference evapotranspiration (ET0) mm/per ha month 11,ET0_11,posnorm,126,210,Ref. evapotranspiration in November mm/per ha month
 Reference evapotranspiration (ET0) mm/per ha month 12,ET0_12,posnorm,145.5,242.5,Ref. evapotranspiration in December mm/per ha month
 ,,,,,
-Crop coefficient in month 1,kc_1,posnorm,0.9,1,Crop coefficient in January (%)
-Crop coefficient in month 2,kc_2,posnorm,0.9,1,Crop coefficient in February (%)
-Crop coefficient in month 3,kc_3,posnorm,0.9,1,Crop coefficient in March (%)
-Crop coefficient in month 4,kc_4,posnorm,0.9,1,Crop coefficient in April (%)
-Crop coefficient in month 5,kc_5,posnorm,0.9,1,Crop coefficient in May (%)
-Crop coefficient in month 6,kc_6,posnorm,0.9,1,Crop coefficient in June (%)
-Crop coefficient in month 7,kc_7,posnorm,0.9,1,Crop coefficient in July (%)
-Crop coefficient in month 8,kc_8,posnorm,0.9,1,Crop coefficient in August (%)
-Crop coefficient in month 9,kc_9,posnorm,0.9,1,Crop coefficient in September (%)
-Crop coefficient in month 10,kc_10,posnorm,0.9,1,Crop coefficient in October (%)
-Crop coefficient in month 11,kc_11,posnorm,0.9,1,Crop coefficient in November (%)
-Crop coefficient in month 12,kc_12,posnorm,0.9,1,Crop coefficient in December (%)
+Crop coefficient in month 1,kc_1,posnorm,0.05,0.7,Crop coefficient in January (%)
+Crop coefficient in month 2,kc_2,posnorm,0.6,0.8,Crop coefficient in February (%)
+Crop coefficient in month 3,kc_3,posnorm,0.7,0.9,Crop coefficient in March (%)
+Crop coefficient in month 4,kc_4,posnorm,0.8,1,Crop coefficient in April (%)
+Crop coefficient in month 5,kc_5,posnorm,0.8,1,Crop coefficient in May (%)
+Crop coefficient in month 6,kc_6,posnorm,0.6,0.8,Crop coefficient in June (%)
+Crop coefficient in month 7,kc_7,posnorm,0.5,0.7,Crop coefficient in July (%)
+Crop coefficient in month 8,kc_8,posnorm,0.4,0.6,Crop coefficient in August (%)
+Crop coefficient in month 9,kc_9,posnorm,0.4,0.6,Crop coefficient in September (%)
+Crop coefficient in month 10,kc_10,posnorm,0.5,0.7,Crop coefficient in October (%)
+Crop coefficient in month 11,kc_11,posnorm,0.6,0.8,Crop coefficient in November (%)
+Crop coefficient in month 12,kc_12,posnorm,0.7,0.9,Crop coefficient in December (%)
 ,,,,,
 Effective rainfall - minimum threshold,effprec_low,posnorm,5,10,Effective rainfall - minimum threshold
 Effective rainfall - maximum threshold,effprec_high,posnorm,90,200,Effective rainfall - maximum threshold
 ,,,,,
-Efficiency of water pumps,effi_pump,tnorm_0_1,0.7,0.9,Efficiency of the water pumps (%)
-Efficiency of irrigation scheduling and allocation,effi_sched,tnorm_0_1,0.6,0.9,Efficiency of irrigation scheduling (%)
+Efficiency of water pumps,effi_pump,tnorm_0_1,0.91,0.99,Efficiency of the water pumps (%)
+Efficiency of irrigation scheduling and allocation,effi_sched,tnorm_0_1,0.89,0.98,Efficiency of irrigation scheduling (%)
 "Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).",var_CV,posnorm,5,20,Coefficient of variation (%)
 ,,,,,
 Total irrigable area,available_area,posnorm,100,300,Available area (ha)
