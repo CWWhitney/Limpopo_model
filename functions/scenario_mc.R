@@ -60,6 +60,6 @@ scenario_mc <- function (base_estimate, scenarios, model_function, ..., numberOf
       end_results$call <- "multi-scenario call"
     }
   }
-  class(end_results) <- cbind("mcSimulation", class(end_results))
+  class(end_results) <- c("mcSimulation", class(end_results)) 
   return(end_results)
 }
