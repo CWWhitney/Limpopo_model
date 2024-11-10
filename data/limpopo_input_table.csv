@@ -12,18 +12,18 @@ Precipitation in month 10 in mm,prec_10,posnorm,5,15,Precipitation in October in
 Precipitation in month 11 in mm,prec_11,posnorm,7,21,Precipitation in November in mm
 Precipitation in month 12 in mm,prec_12,posnorm,45,135,Precipitation in December in mm
 ,,,,,
-Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package),ET0_1,posnorm,144,240,Ref. evapotranspiration in January mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 2,ET0_2,posnorm,114.75,191.25,Ref. evapotranspiration in February mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 3,ET0_3,posnorm,96,160,Ref. evapotranspiration in March mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 4,ET0_4,posnorm,67.5,112.5,Ref. evapotranspiration in April mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 5,ET0_5,posnorm,52.5,87.5,Ref. evapotranspiration in May mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 6,ET0_6,posnorm,32.25,53.75,Ref. evapotranspiration in June mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 7,ET0_7,posnorm,40.5,67.5,Ref. evapotranspiration in July mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 8,ET0_8,posnorm,52.5,87.5,Ref. evapotranspiration in August mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 9,ET0_9,posnorm,71.25,118.75,Ref. evapotranspiration in September mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 10,ET0_10,posnorm,99.75,166.25,Ref. evapotranspiration in October mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 11,ET0_11,posnorm,126,210,Ref. evapotranspiration in November mm/per ha month
-Reference evapotranspiration (ET0) mm/per ha month 12,ET0_12,posnorm,145.5,242.5,Ref. evapotranspiration in December mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package),ET0_1,posnorm,120,180,Ref. evapotranspiration in January mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 2,ET0_2,posnorm,100,160,Ref. evapotranspiration in February mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 3,ET0_3,posnorm,90,140,Ref. evapotranspiration in March mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 4,ET0_4,posnorm,60,100,Ref. evapotranspiration in April mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 5,ET0_5,posnorm,50,80,Ref. evapotranspiration in May mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 6,ET0_6,posnorm,30,60,Ref. evapotranspiration in June mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 7,ET0_7,posnorm,30,60,Ref. evapotranspiration in July mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 8,ET0_8,posnorm,40,70,Ref. evapotranspiration in August mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 9,ET0_9,posnorm,60,100,Ref. evapotranspiration in September mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 10,ET0_10,posnorm,80,130,Ref. evapotranspiration in October mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 11,ET0_11,posnorm,100,160,Ref. evapotranspiration in November mm/per ha month
+Reference evapotranspiration (ET0) mm/per ha month 12,ET0_12,posnorm,120,180,Ref. evapotranspiration in December mm/per ha month
 ,,,,,
 Crop coefficient in month 1,kc_1,posnorm,0.05,0.7,Crop coefficient in January (%)
 Crop coefficient in month 2,kc_2,posnorm,0.6,0.8,Crop coefficient in February (%)
