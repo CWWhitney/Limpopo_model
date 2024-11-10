@@ -45,9 +45,9 @@ Efficiency of water pumps,effi_pump,tnorm_0_1,0.91,0.99,Efficiency of the water 
 Efficiency of irrigation scheduling and allocation,effi_sched,tnorm_0_1,0.89,0.98,Efficiency of irrigation scheduling (%)
 "Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).",var_CV,posnorm,5,20,Coefficient of variation (%)
 ,,,,,
-Total irrigable area,available_area,posnorm,100,300,Available area (ha)
+Total irrigable area,available_area,posnorm,100,300,"Available farm area in Prieska, Ga-Selwana, and Mahale (ha)"
 Share of land that is not used because of socio-political obstacles,unused_sociopolit,tnorm_0_1,0.2,0.4,Share of  land unused due to sociopolitical obstacles (%)
-Number of subsistence households,n_subsistence_farmers,posnorm,30,200,Number of subsistence farmers (#)
+Number of smallholder farming households,n_subsistence_farmers,posnorm,30,200,Number of smallholder farmer (hhs)
 Farm size per subsistence households,necessary_farm_size_per_household,posnorm,1.5,2.5,Needed farm size per household (ha)
 ,,,,,
 eflow in month 1 in m3 / month,eflow_1,posnorm,1658637.363,2487956.044,e-flow in January in m3 / month
