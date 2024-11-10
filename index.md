@@ -159,9 +159,16 @@ effective_rainfall<-sapply(effective_rain,function(x) max(x,effprec_low))
 # ET0 is the baseline evapotranspiration, based on the Hargreaves Samani equation, as implemented in the Evapotranspiration package). Input temperature data comes from the NASAPOWER dataset (accessed through the nasapower package). The scenario data are based on scenarios that represent conditions during real years in the past. 
 ET0 <- sapply(1:12,function(x) eval(parse(text=paste0("ET0_",x)))) # in mm
 # To get from ET0 to crop water use, we need to multiply ET0 with a crop coefficient (kc), which is estimated for each month.
+
+# # The crop coefficient (kc) ranges 
+# Maize: 0.4 to 1.2, depending on the growth stage.
+# Legumes: 0.4 to 1.0, depending on the crop type and growth stage.
+# Vegetables: 0.6 to 1.2, depending on the crop and stage.
+
 kc <- sapply(1:12,function(x) eval(parse(text=paste0("kc_",x)))) # in mm
 # resulting 12 months of crop water needs
 cropwat_need <- ET0*kc # in mm
+
 
 # Compute irrigation water needs ####
 irrigation_need <- cropwat_need-effective_rainfall # in mm
@@ -183,15 +190,18 @@ river_flow <- pre_livestock_river_flow-livestock_water_needs
 # Total farmed area in ha in the region and number of farm households
 demand_for_farm_area <- n_subsistence_farmers*necessary_farm_size_per_household
 # ha of farmed area either all that is available or just what is demanded (if that is less) minus the expected portion of that land that is not available for sociopolitical reasons
+# Total irrigable Letaba River smallholder irrigation area
 farmed_area <- min(available_area, demand_for_farm_area)*(1-unused_sociopolit)
+# the farmed_area value matches realistic values for the Letaba River’s smallholder irrigation area. 
 
 # Calculating the total annual crop water need m3/ha ####
 total_cropwater_need <- cropwat_need*farmed_area*10 # total water need in m3 (the 10 is the mm to m3/ha conversion)
 total_effective_rainfall <- effective_rainfall*farmed_area*10 # total effective rainfall per year
 
+# total_irrigation_need calculation (in m³/ha)
 # Calculating the total annual irrigation need m3/ha ####
 total_irrigation_need <- total_cropwater_need-total_effective_rainfall # in m3/ha per year
-# sum(total_irrigation_need/farmed_area) is around 8600 m3/ha, very close to the reported values across the literature in Limpopo
+# sum(total_irrigation_need/farmed_area) is around 8600 m3/ha, very close to the reported values across the literature in Limpopo - reasonable by compared to known benchmarks for irrigation requirements in similar climates and cropping systems.
 
 # Calculating the annual water losses in m3/ha ####
 # from the efficiency of the pumps and in the water allocation 
@@ -202,16 +212,42 @@ efficiency_pumps <- sapply(efficiency_pumps, function(x)  min(x,1))
 efficiency_pumps <- sapply(efficiency_pumps, function(x)  max(x,0))
 efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  min(x,1))
 efficiency_irrig_scheduling <- sapply(efficiency_irrig_scheduling, function(x)  max(x,0))
-# # water_losses_share represents the share of water lost due to inefficiencies, calculated as 
-# 1 − ( efficiency_pumps × efficiency_irrig_scheduling )
+#### CW Note ####
+# irrigation efficiency may be better adjusting these values higher to reflect more efficient irrigation practices.
+#### CW Note ####
+
+# # Test 
+# source(file = "functions/test_efficiency_values.R")
+# # Define a range of efficiency values to test (e.g., 50%, 70%, 90%)
+# efficiency_values <- c(0.5, 0.7, 0.9)
+# # Run the function and observe the results
+# efficiency_test_results <- test_efficiency_values(
+#   x = mcSimulation_results$x, 
+#   varnames = colnames(mcSimulation_results$x), 
+#   efficiency_values = efficiency_values
+# )
+# Water Demand at Different Efficiencies
+# 50% Efficiency:
+# 
+# Yearly Irrigation Water Need: 4,830,093 m³
+# At 50% efficiency, your model indicates a very high yearly irrigation water need, which suggests that a lot of water is being lost due to inefficiencies.
+# 70% Efficiency:
+# 
+# Yearly Irrigation Water Need: 2,464,333 m³
+# With 70% efficiency, the water demand drops significantly. However, the total demand is still relatively high.
+# 90% Efficiency:
+# 
+# Yearly Irrigation Water Need: 1,490,770 m³
+# At 90% efficiency, the water demand is much more reasonable and closer to what might be expected under efficient irrigation practices.
+
+# water_losses_share represents the share of water lost due to inefficiencies, 
+# calculated as  1 − ( efficiency_pumps × efficiency_irrig_scheduling )
 # 1−(efficiency_pumps×efficiency_irrig_scheduling). 
 # This results in higher irrigation water needs to compensate for these losses
 # around 50% efficiency
 water_losses_share <- (1-efficiency_pumps*efficiency_irrig_scheduling)
 #Adjusted Irrigation Water Need:
-# irrigation_water_need is calculated by dividing total_irrigation_need by the remaining efficient share 
-# ( 1 − water_losses_share )
-# (1−water_losses_share), effectively increasing the water required due to inefficiencies.
+# irrigation_water_need is calculated by dividing total_irrigation_need by the remaining efficient share (1 − water_losses_share) (1−water_losses_share), effectively increasing the water required due to inefficiencies.
 irrigation_water_need <- total_irrigation_need/(1-water_losses_share) # m3/ha 
 # irrigation inefficiency doubles the irrigation need
 # sum(irrigation_water_need-total_irrigation_need)/farmed_area is around 6,886
@@ -318,19 +354,25 @@ We first make a scenario file, for which we use evapotranspiration data
 for 1980 to 2009.
 
 ``` r
+# meteorological and solar data
 # load data from Evapotranspiration
 data("constants")
 
 # get global meteorology and surface solar energy climatology data
 ag_d <- get_power(
   community = "ag",
-# Corrdinates of the Letaba region
+# Coordinates of the Letaba region
   lonlat = c(31.08,-23.7), 
   pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
   dates = c("1981-01-01", "2020-12-31"),
 # Temporal API end-point for data being queried
   temporal_api = "daily"
 )
+
+# Test
+# Check that the temperature and precipitation values make sense for the Letaba River region
+# summary(ag_d$Tmax)
+# maximum temperature (46.48°C) is an outlier but within reason
 
 # choose years of assessment
 years <- 1981:2009
@@ -366,8 +408,14 @@ ET <-
 #> Max: 30.45
 #> Min: 1.35
 
+# Test
+# Review ET Output
+# summary(ET$ET.Monthly) 
+# monthly ET values are within expected ranges for Letaba River region
+
 # create data frame with years <- 1981:2009
 ETdata <- data.frame(year = years)
+
 # three-letter abbreviations for the English month names
 ETdata[, month.abb[1:12]] <- NA
 for (yyyy in years)
@@ -384,32 +432,68 @@ for (yyyy in years)
   raindata[which(raindata[, 1] == yyyy), 2:13] <-
   rain[which(rain[, 1] == yyyy), 3]
 
+# Aggregate Data Check summary(rain) rainfall values are
+# reasonable for Letaba River region While such extreme monthly rainfall is
+# uncommon, it is not unprecedented, especially during periods of intense
+# weather events like tropical cyclones or prolonged heavy rainfall. For
+# instance, tropical cyclones have been known to bring substantial rainfall to
+# the region
 
+# 48 unique variable names, with 12 for each category (river_flow, ET0, prec, and eflow).
 scenario_variables <-
   c(paste0("river_flow_", 1:12),
     paste0("ET0_", 1:12),
     paste0("prec_", 1:12),
     paste0("eflow_", 1:12))
 
+# A data frame named Scenarios with two columns:
+# Variable: Contains all the names from scenario_variables.
+# param: Every row in this column is filled with the string "both".
 Scenarios <- data.frame(Variable = scenario_variables, param = "both")
 
+# Read the E-flows Data
 eflows<-read.csv("data/Letaba_eflows_exceedence_m3_per_s.csv", fileEncoding = "UTF-8-BOM")
 
+#Sort the columns of the eflows data frame so that the monthly columns are ordered from January to December.
 eflowsort <-
   eflows[, c(1, order(unlist(sapply(colnames(eflows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
+# Extract the names of the columns corresponding to the months & Match each month name to its corresponding index in the order January to December.
 
+# Filter - only include rows with Exceedence == 80
 eflow_exceedance<-eflowsort[which(eflowsort$Exceedence == 80),]
 
+# Test 
+# # eflow_exceedance Monthly e-flow (m3)=flow rate (m3/s) × number days×24×3600
+# For example, for January (0.8 m³/s): 0.8 × 31 × 24 × 3600 = 2 , 142 , 720
+# m³/month 0.8×31×24×3600=2,142,720m³/month matches the value in 
+# eflow_per_month = confirmed
+
+# Convert the e-flow data from cubic meters per second (m³/s) to cubic meters per month (m³/month)
 eflow_per_month<-eflow_exceedance[2:13]*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24
 
+# Test
+# eflow_per_month
+# conversion of e-flow rates from m³/s to m³/month is consistently across the months
+
+# Calculate Monthly E-flows in m3 per Month
 # read data of present data 
 present_flows <- read.csv("data/Letaba_modelled_present_flows_m3_per_s.csv", fileEncoding = "UTF-8-BOM")
+# Sort present flows
 presentflowsort <-
   present_flows[, c(1, order(unlist(sapply(colnames(present_flows)[2:13], function(x)
     which(month.abb[1:12] == x)))) + 1)]
 
-presentflow_permonth<-data.frame(cbind(presentflowsort[,1],t(t(presentflowsort[,2:13])*c(31,28,31,30,31,30,31,31,30,31,30,31)*3600*24)))
+# Convert the present flow data from m³/s to m³/month
+# Combine the year column with the converted flow values
+presentflow_permonth<-data.frame(cbind(presentflowsort[,1],
+                                       t(t(presentflowsort[,2:13])*
+                                           c(31,28,31,30,31,30,31,31,30,31,30,31)*
+                                           3600*24)))
+# Test
+# summary(presentflow_permonth)
+# plot(presentflow_permonth$V1, presentflow_permonth$Jan, type = "l", main = "January River Flow Over Time", xlab = "Year", ylab = "Flow (m³/month)")
+# Some very high values in January in the 50s but within reason
 
 colnames(presentflow_permonth)[1] <- "Year"
 
@@ -438,12 +522,13 @@ for (yyyy in years)
 natural_flows<-read.csv("data/Letaba_modelled_natural_flows_m3_per_s.csv", fileEncoding="UTF-8-BOM")
 ```
 
-Here we run the model with the `scenario_mc` function from the
+Here we run the model with the `scenario_mc` function cf. the
 `decisionSupport` package (Luedeling et al. 2024). The function
 essentially generates a Monte Carlo model with data from existing
 scenarios for some of the model inputs.
 
 ``` r
+source(file = "functions/scenario_mc.R")
 # run the model with the scenario_mc function 
 mcSimulation_results <-
   scenario_mc(
@@ -484,7 +569,7 @@ that is lacking in comparison to the baseline scenario.
 
 Here is a plot for comparison to the baseline scenario. This is a plot
 of the mean annual crop water gap (deficit in water needed for crops).
-This ranges from 0 to 80 percent.
+This ranges from 0 to 70 percent.
 
     #> Scale for fill is already present.
     #> Adding another scale for fill, which will replace the existing scale.
@@ -647,12 +732,12 @@ between the baseline UNRES and EFLOW scenarios.
 ``` r
 summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 #>    variable         expected_gain        EVPI_do    EVPI_dont            EVPI  
-#>  Length:71          Min.   :0.01654   Min.   :0   Min.   :0.00000   Min.   :0  
-#>  Class :character   1st Qu.:0.08604   1st Qu.:0   1st Qu.:0.06247   1st Qu.:0  
-#>  Mode  :character   Median :0.11693   Median :0   Median :0.11128   Median :0  
-#>                     Mean   :0.10463   Mean   :0   Mean   :0.08695   Mean   :0  
-#>                     3rd Qu.:0.12497   3rd Qu.:0   3rd Qu.:0.12485   3rd Qu.:0  
-#>                     Max.   :0.17009   Max.   :0   Max.   :0.17009   Max.   :0  
+#>  Length:71          Min.   :0.01907   Min.   :0   Min.   :0.00000   Min.   :0  
+#>  Class :character   1st Qu.:0.09334   1st Qu.:0   1st Qu.:0.06405   1st Qu.:0  
+#>  Mode  :character   Median :0.12611   Median :0   Median :0.11432   Median :0  
+#>                     Mean   :0.11052   Mean   :0   Mean   :0.09184   Mean   :0  
+#>                     3rd Qu.:0.13203   3rd Qu.:0   3rd Qu.:0.13181   3rd Qu.:0  
+#>                     Max.   :0.18656   Max.   :0   Max.   :0.18656   Max.   :0  
 #>                     NA's   :12                                                 
 #>    decision        
 #>  Length:71         
@@ -670,12 +755,12 @@ between the baseline UNRES and SUPPL scenarios.
 ``` r
 summary(results_evpi$Mean_Crop_water_gap_difference_3_vs_1)
 #>    variable         expected_gain         EVPI_do         EVPI_dont      EVPI  
-#>  Length:71          Min.   :-0.41450   Min.   :0.0000   Min.   :0   Min.   :0  
-#>  Class :character   1st Qu.:-0.39088   1st Qu.:0.1418   1st Qu.:0   1st Qu.:0  
-#>  Mode  :character   Median :-0.37520   Median :0.3425   Median :0   Median :0  
-#>                     Mean   :-0.31470   Mean   :0.2615   Mean   :0   Mean   :0  
-#>                     3rd Qu.:-0.26584   3rd Qu.:0.3904   3rd Qu.:0   3rd Qu.:0  
-#>                     Max.   :-0.04831   Max.   :0.4145   Max.   :0   Max.   :0  
+#>  Length:71          Min.   :-0.34425   Min.   :0.0000   Min.   :0   Min.   :0  
+#>  Class :character   1st Qu.:-0.32259   1st Qu.:0.1033   1st Qu.:0   1st Qu.:0  
+#>  Mode  :character   Median :-0.30850   Median :0.2764   Median :0   Median :0  
+#>                     Mean   :-0.25819   Mean   :0.2146   Mean   :0   Mean   :0  
+#>                     3rd Qu.:-0.22135   3rd Qu.:0.3221   3rd Qu.:0   3rd Qu.:0  
+#>                     Max.   :-0.03686   Max.   :0.3443   Max.   :0   Max.   :0  
 #>                     NA's   :12                                                 
 #>    decision        
 #>  Length:71         
@@ -706,8 +791,6 @@ There are no variables with a positive EVPI.
 | Precipitation in month 11 in mm | prec_11 | posnorm | 7.00 | 21.00 | Precipitation in November in mm |
 | Precipitation in month 12 in mm | prec_12 | posnorm | 45.00 | 135.00 | Precipitation in December in mm |
 |  |  |  | NA | NA |  |
-|  |  |  | NA | NA |  |
-|  |  |  | NA | NA |  |
 | Reference evapotranspiration (ET0) mm/per ha month 1 (Hargreaves Samani equation with nasapower package) | ET0_1 | posnorm | 144.00 | 240.00 | Ref. evapotranspiration in January mm/per ha month |
 | Reference evapotranspiration (ET0) mm/per ha month 2 | ET0_2 | posnorm | 114.75 | 191.25 | Ref. evapotranspiration in February mm/per ha month |
 | Reference evapotranspiration (ET0) mm/per ha month 3 | ET0_3 | posnorm | 96.00 | 160.00 | Ref. evapotranspiration in March mm/per ha month |
@@ -721,18 +804,18 @@ There are no variables with a positive EVPI.
 | Reference evapotranspiration (ET0) mm/per ha month 11 | ET0_11 | posnorm | 126.00 | 210.00 | Ref. evapotranspiration in November mm/per ha month |
 | Reference evapotranspiration (ET0) mm/per ha month 12 | ET0_12 | posnorm | 145.50 | 242.50 | Ref. evapotranspiration in December mm/per ha month |
 |  |  |  | NA | NA |  |
-| Crop coefficient in month 1 | kc_1 | posnorm | 0.90 | 1.00 | Crop coefficient in January (%) |
-| Crop coefficient in month 2 | kc_2 | posnorm | 0.90 | 1.00 | Crop coefficient in February (%) |
-| Crop coefficient in month 3 | kc_3 | posnorm | 0.90 | 1.00 | Crop coefficient in March (%) |
-| Crop coefficient in month 4 | kc_4 | posnorm | 0.90 | 1.00 | Crop coefficient in April (%) |
-| Crop coefficient in month 5 | kc_5 | posnorm | 0.90 | 1.00 | Crop coefficient in May (%) |
-| Crop coefficient in month 6 | kc_6 | posnorm | 0.90 | 1.00 | Crop coefficient in June (%) |
-| Crop coefficient in month 7 | kc_7 | posnorm | 0.90 | 1.00 | Crop coefficient in July (%) |
-| Crop coefficient in month 8 | kc_8 | posnorm | 0.90 | 1.00 | Crop coefficient in August (%) |
-| Crop coefficient in month 9 | kc_9 | posnorm | 0.90 | 1.00 | Crop coefficient in September (%) |
-| Crop coefficient in month 10 | kc_10 | posnorm | 0.90 | 1.00 | Crop coefficient in October (%) |
-| Crop coefficient in month 11 | kc_11 | posnorm | 0.90 | 1.00 | Crop coefficient in November (%) |
-| Crop coefficient in month 12 | kc_12 | posnorm | 0.90 | 1.00 | Crop coefficient in December (%) |
+| Crop coefficient in month 1 | kc_1 | posnorm | 0.05 | 0.70 | Crop coefficient in January (%) |
+| Crop coefficient in month 2 | kc_2 | posnorm | 0.60 | 0.80 | Crop coefficient in February (%) |
+| Crop coefficient in month 3 | kc_3 | posnorm | 0.70 | 0.90 | Crop coefficient in March (%) |
+| Crop coefficient in month 4 | kc_4 | posnorm | 0.80 | 1.00 | Crop coefficient in April (%) |
+| Crop coefficient in month 5 | kc_5 | posnorm | 0.80 | 1.00 | Crop coefficient in May (%) |
+| Crop coefficient in month 6 | kc_6 | posnorm | 0.60 | 0.80 | Crop coefficient in June (%) |
+| Crop coefficient in month 7 | kc_7 | posnorm | 0.50 | 0.70 | Crop coefficient in July (%) |
+| Crop coefficient in month 8 | kc_8 | posnorm | 0.40 | 0.60 | Crop coefficient in August (%) |
+| Crop coefficient in month 9 | kc_9 | posnorm | 0.40 | 0.60 | Crop coefficient in September (%) |
+| Crop coefficient in month 10 | kc_10 | posnorm | 0.50 | 0.70 | Crop coefficient in October (%) |
+| Crop coefficient in month 11 | kc_11 | posnorm | 0.60 | 0.80 | Crop coefficient in November (%) |
+| Crop coefficient in month 12 | kc_12 | posnorm | 0.70 | 0.90 | Crop coefficient in December (%) |
 |  |  |  | NA | NA |  |
 | Effective rainfall - minimum threshold | effprec_low | posnorm | 5.00 | 10.00 | Effective rainfall - minimum threshold |
 | Effective rainfall - maximum threshold | effprec_high | posnorm | 90.00 | 200.00 | Effective rainfall - maximum threshold |
