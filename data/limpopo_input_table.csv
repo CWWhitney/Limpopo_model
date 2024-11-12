@@ -41,8 +41,8 @@ Crop coefficient in month 12,kc_12,posnorm,0.1,0.2,Crop coefficient in December 
 Effective rainfall - minimum threshold,effprec_low,posnorm,5,10,Effective rainfall - minimum threshold in Letaba
 Effective rainfall - maximum threshold,effprec_high,posnorm,90,200,Effective rainfall - maximum threshold in Letaba
 ,,,,,
-Efficiency of water pumps,effi_pump,tnorm_0_1,0.7,0.9,Efficiency of the water pumps (%)
-Efficiency of irrigation scheduling and allocation,effi_sched,tnorm_0_1,0.6,0.9,Efficiency of irrigation scheduling (%)
+Efficiency of water pumps,effi_pump,tnorm_0_1,0.9,0.99,Efficiency of the water pumps (%)
+Efficiency of irrigation scheduling and allocation,effi_sched,tnorm_0_1,0.89,0.98,Efficiency of irrigation scheduling (%)
 "Coefficient of variation, ratio of the standard deviation to the mean (a measure of relative variability).",var_CV,posnorm,5,20,Coefficient of variation (%)
 ,,,,,
 Total irrigable area,available_area,posnorm,100,300,"Available farm area in Prieska, Ga-Selwana, and Mahale (ha)"
