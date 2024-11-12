@@ -22,8 +22,16 @@ source(file = "functions/vv.R")
 limpopo_decision_function <- function(x) {
   # generating boundary conditions for the simulation run ####
   
+  # In the context of the Letaba River region, the dry season typically spans
+  # April to October, with the peak dry months being June, July, August, and
+  # September. The wet season, which experiences the majority of the rainfall,
+  # generally occurs from November to March. Therefore, our focus on seasonal
+  # water demand analysis is focused on the dry months of:
+  # April May June July August September October
+
   # simulate how much rainwater is available in mm ####
-  rainfall <- sapply(1:12, function(x)
+  # focused solely on the dry season months (April to October, 4:10)
+  rainfall <- sapply(4:10, function(x)
     eval(parse(text = paste0("prec_", x))))
   # lowest in the dry season between July and November 
   # Test 
@@ -66,7 +74,7 @@ limpopo_decision_function <- function(x) {
   # in the Evapotranspiration package). Input temperature from NASAPOWER dataset
   # (accessed through the nasapower package). The scenario data are based on
   # scenarios that represent conditions during real years in the past.
-  ET0 <- sapply(1:12, function(x)
+  ET0 <- sapply(4:10, function(x)
     eval(parse(text = paste0("ET0_", x)))) # in mm / month
   #  FAO Irrigation and Drainage Paper 56, reference ET0 values for arid and
   # semi-arid regions 80–150 mm/month during peak months
@@ -75,12 +83,12 @@ limpopo_decision_function <- function(x) {
   # Paper No. 56 by Allen et al. 1998) Maize: 0.4 to 1.2, depending on the
   # growth stage. Legumes: 0.4 to 1.0, depending on the crop type and growth
   # stage. Vegetables: 0.6 to 1.2, depending on the crop and stage.
-  kc <- sapply(1:12, function(x)
+  kc <- sapply(4:10, function(x)
     eval(parse(text = paste0("kc_", x)))) # in mm
   
   # To get from ET0 to crop water use, we need to multiply ET0 with a crop
   # coefficient (kc), which is estimated for each month. According to the
-  # resulting 12 months of crop water needs
+  # resulting in 7 months of crop water needs
   # crop water need per hectare, in millimeters
   cropwat_need <- ET0 * kc # in mm / month
   # Test
@@ -98,17 +106,17 @@ limpopo_decision_function <- function(x) {
   
   # Define river flow for each month #### Base river flow data from 1920 to 2010,
   # Letaba River at EWR site EWR4 (Letaba Ranch upstream Little Letaba confluence)
-  pre_livestock_river_flow <- sapply(1:12, function(x)
+  pre_livestock_river_flow <- sapply(4:10, function(x)
     eval(parse(text = paste0("river_flow_", x)))) # in m3 / month
   
   # Define e-flow for each month ####
-  eflow <- sapply(1:12, function(x)
+  eflow <- sapply(4:10, function(x)
     eval(parse(text = paste0("eflow_", x)))) # in m3 / month
   
   # Livestock ####
   # Calculating the water needed for watering livestock m3 / month ####
   # assuming that this is more or less stable throughout the year, but varies a bit
-  livestock_water_needs <- vv(livestock_water_need, var_CV, 12) # m3 / month
+  livestock_water_needs <- vv(livestock_water_need, var_CV, 7) # m3 / month
   # assuming that the eflows aren't affecting ability to water livestock
   # and that there's always enough water for all the livestock
   river_flow <- pre_livestock_river_flow - livestock_water_needs
@@ -158,8 +166,8 @@ limpopo_decision_function <- function(x) {
   # Calculating the annual water losses in m3/ha #### from the efficiency of
   # pumps efficiency_pumps and efficiency of irrigation scheduling
   # efficiency_irrig_scheduling 
-  efficiency_pumps <- vv(effi_pump, var_CV, 12)
-  efficiency_irrig_scheduling <- vv(effi_sched, var_CV, 12)
+  efficiency_pumps <- vv(effi_pump, var_CV, 7)
+  efficiency_irrig_scheduling <- vv(effi_sched, var_CV, 7)
   # adjusted to ensure they remain between 0 and 1
   efficiency_pumps <- sapply(efficiency_pumps, function(x)
     min(x, 1))
@@ -196,24 +204,24 @@ limpopo_decision_function <- function(x) {
   # at all for water extraction. Little or no effective measures are taken to
   # ensure that e-flows are maintained at times when the present flow is below the
   # e-flow requirement.
-  scen1_usable_river_flow <- sapply(1:12, function(x)
+  scen1_usable_river_flow <- sapply(1:7, function(x)
     max(0, river_flow[x] - minimum_flow_to_operate_pumps))
   
   # Scenario 2 - EFLOW abstraction control #### with eflows as a limit to
   # extraction only. E-flows are to be ensured whenever there is more water in the
   # river than the e-flow requirement would mandate, i.e. farmers aren't allowed
   # to extract water beyond the e-flow requirement.
-  scen2_usable_river_flow <- sapply(1:12, function(x)
+  scen2_usable_river_flow <- sapply(1:7, function(x)
     max(0, river_flow[x] - max(eflow[x], minimum_flow_to_operate_pumps)))
   
   # Scenario 3 - SUPPL dam releases #### e-flows are assured by dam releases,
   # whenever the present flow is below the e-flow requirement, water is released
   # from an upstream dam to ensure that the e-flows are met.
-  adj_river_flow <- sapply(1:12, function(x)
+  adj_river_flow <- sapply(1:7, function(x)
     max(river_flow[x], eflow[x]))
   
   scen3_usable_river_flow <-
-    sapply(1:12, function(x)
+    sapply(1:7, function(x)
       max(0, adj_river_flow[x] - minimum_flow_to_operate_pumps))
   
   # Calculate monthly how much water is released from an upstream dam to ensure
@@ -222,24 +230,24 @@ limpopo_decision_function <- function(x) {
   
   # Calculate how much water gets extracted from the river
   scen1_extracted_river_water <-
-    sapply(1:12, function(x)
+    sapply(1:7, function(x)
       min(scen1_usable_river_flow[x], irrigation_water_need[x]))
   scen2_extracted_river_water <-
-    sapply(1:12, function(x)
+    sapply(1:7, function(x)
       min(scen2_usable_river_flow[x], irrigation_water_need[x]))
   scen3_extracted_river_water <-
-    sapply(1:12, function(x)
+    sapply(1:7, function(x)
       min(scen3_usable_river_flow[x], irrigation_water_need[x]))
   
   # calculate damage to crop production due to lack of irrigation water
   scen1_water_shortfall <-
-    sapply(1:12, function (x)
+    sapply(1:7, function (x)
       max(0, irrigation_water_need[x] - scen1_extracted_river_water[x]))
   scen2_water_shortfall <-
-    sapply(1:12, function (x)
+    sapply(1:7, function (x)
       max(0, irrigation_water_need[x] - scen2_extracted_river_water[x]))
   scen3_water_shortfall <-
-    sapply(1:12, function (x)
+    sapply(1:7, function (x)
       max(0, irrigation_water_need[x] - scen3_extracted_river_water[x]))
   
   scen1_irrigation_shortfall <- scen1_water_shortfall * (1 - water_losses_share)

@@ -244,6 +244,7 @@ Fig_total_annual_crop_water_irrigation_need <-
                     ggplot2::scale_fill_discrete(labels=c('Crops', 'Irrigation')) +     
                     ggplot2::theme(legend.position="bottom") 
 
+source(file = "functions/plot_cashflow.R")
 Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plotting_simulations, 
               cashflow_var_name = "irrigation_water_need",
               y_axis_name = "",
@@ -283,7 +284,7 @@ summary_table <- data.frame(
 )
 
 # Loop over each month and calculate the summary statistics
-for (i in 1:12) {
+for (i in 1:7) {
   # Get the variable name dynamically
   variable_name <- paste0("cropwater_need", i)
   
@@ -315,7 +316,7 @@ kable(summary_table, format = "markdown")
 
 gap1_simulations <- mcSimulation_results 
 
-gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)] <- gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:12)]*100
+gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:7)] <- gap1_simulations$y[,paste0("Crop_water_gap_scen1_",1:7)]*100
 
 Fig_monthly_baseline_crop_water_gap <- 
   plot_cashflow(mcSimulation_object = gap1_simulations, 
@@ -365,7 +366,7 @@ Fig_eflow_policy_effect_crop_water_gap <- decisionSupport::plot_distributions(mc
 
 gap2_1_simulations <- mcSimulation_results 
 
-gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:7)] <- gap2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:7)]*100
 
 monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2_1_simulations, 
               cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
@@ -382,7 +383,7 @@ monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2
 # flow of the differences for the plot
 gap3_1_simulations <- mcSimulation_results
 
-gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)]*100
+gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:7)] <- gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:7)]*100
 
 monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = gap3_1_simulations, 
               cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
@@ -435,7 +436,7 @@ Percent change in the crop water gap (deficit for crops) under the EFLOW scenari
 
 eflow2_1_simulations <- mcSimulation_results
 
-eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)] <- eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:12)]*100
+eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:7)] <- eflow2_1_simulations$y[,paste0("Crop_water_gap_difference_2_vs_1",1:7)]*100
 
 Fig_monthly_env_eflow_increase_crop_water_gap <- plot_cashflow(mcSimulation_object = eflow2_1_simulations, 
               cashflow_var_name = "Crop_water_gap_difference_2_vs_1",
