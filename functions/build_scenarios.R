@@ -1,48 +1,3 @@
-# meteorological and solar data
-# load data from Evapotranspiration
-data("constants")
-
-# get global meteorology and surface solar energy climatology data
-ag_d <- get_power(
-  community = "ag",
-  # Coordinates of the Letaba region
-  lonlat = c(31.08, -23.7),
-  pars = c("T2M_MAX", "T2M_MIN", "PRECTOTCORR"),
-  dates = c("1981-01-01", "2020-12-31"),
-  # Temporal API end-point for data being queried
-  temporal_api = "daily"
-)
-
-# Test Check that the temperature and precipitation values make sense for the
-# Letaba River region summary(ag_d$Tmax) # maximum temperature is high
-# but within reason (low to mid 40's have been recorded)
-
-
-# choose years of assessment
-years <- 1981:2009
-
-# name variables
-colnames(ag_d)[c(3:5, 8, 9, 10)] <-
-  c("Year", "Month", "Day", "Tmax", "Tmin", "Precipitation")
-
-# Load raw date and climate data with Evapotranspiration
-Inputs <- ReadInputs(c("Tmin", "Tmax"), ag_d, stopmissing = c(50, 50, 50))
-
-# Implementing the Hargreaves-Samani formulation for estimating reference crop evapotranspiration
-ET <-
-  ET.HargreavesSamani(
-    Inputs,
-    constants,
-    ts = "daily",
-    message = "yes",
-    AdditionalStats = "yes",
-    save.csv = "no"
-  )
-
-# Test
-# Review ET Output
-# summary(ET$ET.Monthly)
-# monthly ET values are within expected ranges for Letaba River region
 
 # create data frame with years <- 1981:2009
 ETdata <- data.frame(year = years)
@@ -54,8 +9,8 @@ for (yyyy in years)
   ET$ET.Monthly[as.character(yyyy + 0:11 / 12)]
 
 rain <-
-  aggregate(ag_d$Precipitation,
-            by = list(ag_d$Year, ag_d$Month),
+  aggregate(meteo_clim_data$Precipitation,
+            by = list(meteo_clim_data$Year, meteo_clim_data$Month),
             FUN = sum)
 raindata <- data.frame(year = years)
 raindata[, month.abb[1:12]] <- NA
