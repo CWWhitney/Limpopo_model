@@ -121,7 +121,7 @@ The `numberOfModelRuns` argument is an integer indicating the number of model ru
 
 We first make a scenario file: 
 
-We use NASA POWER From the POWER API
+We use NASA POWER From the POWER API with the `nasapower` package {@R-nasapower} for meteorology and surface solar energy climatology data.
 
 ```{r meteo_clim_data}
 # load data from Evapotranspiration
@@ -145,7 +145,7 @@ summary(meteo_clim_data$T2M_MAX) # maximum temperature is high
 
 ```
 
-We apply the Hargreaves-Samani formulation for estimating reference crop evapotranspiration.
+We use the Hargreaves-Samani formula in `Evapotranspiration` package {@R-Evapotranspiration} to estimate reference crop evapotranspiration (ET0). This method calculates ET0 based on daily temperature extremes (Tmax and Tmin) and extraterrestrial radiation, making it a practical and widely adopted approach for areas where detailed meteorological data are scarce. Despite its simplicity, it provides reasonable ET0 estimates under various conditions, which we validate against expected values for the Letaba River region.
 
 ```{r evapotraspiration_data}
 
