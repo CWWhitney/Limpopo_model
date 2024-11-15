@@ -242,6 +242,8 @@ Fig_total_annual_crop_water_irrigation_need <-
                     ggplot2::labs(x = expression(Total~annual~water~need~(m^3))) + 
                     ggplot2::labs(fill = "") +
                     ggplot2::scale_fill_discrete(labels=c('Crops', 'Irrigation')) +     
+   # Update the fill colors to deep blue and light blue
+  ggplot2::scale_fill_manual(values = c("yellowgreen", "yellow4"), labels = c('Crops', 'Irrigation')) +
                     ggplot2::theme(legend.position="bottom") 
 
 Fig_monthly_irrigation_water_need <- plot_cashflow(mcSimulation_object = plotting_simulations, 
