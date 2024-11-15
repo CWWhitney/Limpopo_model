@@ -449,24 +449,6 @@ pls_result_crop_water_need <- plsr.mcSimulation(object = mcSimulation_pls,
 
 input_table <- read.csv("data/limpopo_input_table.csv")
 
-# ### Irrigation demand
-
-### No e-flows
-
-pls_result_1 <- plsr.mcSimulation(object = mcSimulation_pls,
-                  resultName = "scen1_crop_water_gap", 
-                  ncomp = 1)
-
-PLS_UNRES_baseline_crop_water_gap <- plot_pls(pls_result_1, 
-                            input_table = input_table, 
-                            threshold = 1) + 
-  annotate(geom="text", x=1.7, y=3,
-           label=expression(atop("UNRES",
-                   paste("unrestricted water use")))) +
-          theme(axis.text.x = element_blank(),
-          axis.ticks = element_blank(),
-          axis.title.x = element_blank())
-
 ### Environmental e-flows
 
 pls_result_2 <- plsr.mcSimulation(object = mcSimulation_pls,
@@ -495,27 +477,25 @@ pls_result_3 <- plsr.mcSimulation(object = mcSimulation_pls,
 Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3, 
                             input_table = input_table, 
                             threshold = 1, 
-                            x_axis_name = "VIP")+ 
+                            x_axis_name = "Variable Importance in the Projection (VIP)")+ 
   annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("SUPPL", 
                    paste("dam releases"))))  
 
 
 library(patchwork)
-      PLS_UNRES_baseline_crop_water_gap +
       Fig_PLS_EFLOW_crop_water_gap +
       Fig_PLS_SUPPL_dam_release_crop_water_gap +
-      plot_layout(ncol = 1, guides = "collect") + 
-    plot_annotation(title = "Variable Importance in the Projection (VIP)") &     
+      plot_layout(ncol = 1, guides = "collect") +    
                     ggplot2::theme(legend.position="bottom") 
 ```
 
-![](index_files/figure-gfm/pls-crop_needs-1.png)<!-- -->
+![](index_files/figure-gfm/pls-crop-gap-1.png)<!-- -->
 
 ``` r
 
 
-ggsave("figures/Fig_8_sensitivity.png", width=7, height=10)
+ggsave("figures/Fig_5_sensitivity.png", width=10, height=7)
 ```
 
 ## Expected Value of Perfect Information
