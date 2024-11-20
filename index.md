@@ -465,7 +465,8 @@ Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2,
                    paste("abstraction control")))) + 
           theme(axis.text.x = element_blank(),
           axis.ticks = element_blank(),
-          axis.title.x = element_blank())
+          axis.title.x = element_blank()) +    
+                    ggplot2::theme(legend.position="bottom") 
 
 ### SUPPL dam release - Livelihoods e-flows
 
@@ -480,22 +481,23 @@ Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3,
                             x_axis_name = "Variable Importance in the Projection (VIP)")+ 
   annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("SUPPL", 
-                   paste("dam releases"))))  
+                   paste("dam releases"))))  +    
+                    ggplot2::theme(legend.position="bottom") 
 
 
 library(patchwork)
+
       Fig_PLS_EFLOW_crop_water_gap +
       Fig_PLS_SUPPL_dam_release_crop_water_gap +
-      plot_layout(ncol = 1, guides = "collect") +    
-                    ggplot2::theme(legend.position="bottom") 
+      plot_layout(ncol = 1, guides = "collect") &
+  theme(legend.position = "bottom")
 ```
 
 ![](index_files/figure-gfm/pls-crop-gap-1.png)<!-- -->
 
 ``` r
 
-
-ggsave("figures/Fig_5_sensitivity.png", width=10, height=7)
+ggsave("figures/Fig_5_sensitivity.png", width=7, height=7)
 ```
 
 ## Expected Value of Perfect Information
@@ -531,9 +533,9 @@ between the baseline UNRES and EFLOW scenarios.
 summary(results_evpi$Mean_Crop_water_gap_difference_2_vs_1)
 #>    variable         expected_gain        EVPI_do    EVPI_dont            EVPI  
 #>  Length:71          Min.   :0.01259   Min.   :0   Min.   :0.00000   Min.   :0  
-#>  Class :character   1st Qu.:0.08977   1st Qu.:0   1st Qu.:0.04847   1st Qu.:0  
-#>  Mode  :character   Median :0.11260   Median :0   Median :0.10167   Median :0  
-#>                     Mean   :0.09655   Mean   :0   Mean   :0.08023   Mean   :0  
+#>  Class :character   1st Qu.:0.08977   1st Qu.:0   1st Qu.:0.04963   1st Qu.:0  
+#>  Mode  :character   Median :0.11260   Median :0   Median :0.10110   Median :0  
+#>                     Mean   :0.09649   Mean   :0   Mean   :0.08018   Mean   :0  
 #>                     3rd Qu.:0.11498   3rd Qu.:0   3rd Qu.:0.11486   3rd Qu.:0  
 #>                     Max.   :0.16607   Max.   :0   Max.   :0.16607   Max.   :0  
 #>                     NA's   :12                                                 

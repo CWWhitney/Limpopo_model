@@ -374,12 +374,11 @@ monthly_crop_water_gap_environmental <- plot_cashflow(mcSimulation_object = gap2
               y_axis_name = "",
               x_axis_name = "", 
               facet_labels = "") + 
-  annotate(geom="text", x=3, y=77, 
+  annotate(geom="text", x=6, y=-70, 
            label=expression(atop("% change EFLOW", 
-                                 paste("abstraction control")))) + 
-          theme( axis.text.x = element_blank(),
-          axis.ticks = element_blank()) + 
-  labs(y = "Monthly crop water gap %")
+                                 paste("abstraction control"))))  + 
+  ylim(min_value = -100, max_value = 100) + 
+  scale_x_continuous(breaks = 1:12, labels = month.abb)
 
 # flow of the differences for the plot
 gap3_1_simulations <- mcSimulation_results
@@ -389,23 +388,30 @@ gap3_1_simulations$y[,paste0("Crop_water_gap_difference_3_vs_1",1:12)] <- gap3_1
 monthly_crop_water_gap_suppl <- plot_cashflow(mcSimulation_object = gap3_1_simulations, 
               cashflow_var_name = "Crop_water_gap_difference_3_vs_1",
               y_axis_name = "",
-              x_axis_name = "Month", 
+              x_axis_name = "", 
               facet_labels = "") + 
-  annotate(geom="text", x=3, y= -80, 
+  annotate(geom="text", x=6, y= 70, 
             label=(expression(atop("% change SUPPL", 
-                                   paste("dam releases")))))
+                                   paste("dam releases"))))) + 
+  labs(y = "Monthly crop water gap %") + 
+  ylim(min_value = -100, max_value = 100) + 
+  scale_x_continuous(breaks = 1:12, labels = month.abb)
 
 
 library(patchwork)
 
-  A <- monthly_crop_water_gap_environmental +
-  monthly_crop_water_gap_suppl +
-  plot_layout(ncol = 1, guides = "collect")  
+  A <- monthly_crop_water_gap_suppl +
+    monthly_crop_water_gap_environmental +
+  plot_layout(ncol = 2, guides = "collect")  
 
    B <- Fig_eflow_policy_effect_crop_water_gap  +     
-                    ggplot2::theme(legend.position="bottom") 
+                    ggplot2::theme(legend.position="right") 
 
-   A | B   + plot_layout(axis_titles = "collect", design = "AA\nBC")
+#   A / B   + plot_layout(axis_titles = "collect", design = "AA\nBC")
+
+   # Combine A and B, stretching B across the bottom
+A / B + 
+  plot_layout(heights = c(2, 3)) 
 
 ggsave("figures/Fig_4_All_eflows.png", width=10, height=5)
 
@@ -569,7 +575,8 @@ Fig_PLS_EFLOW_crop_water_gap <- plot_pls(pls_result_2,
                    paste("abstraction control")))) + 
           theme(axis.text.x = element_blank(),
           axis.ticks = element_blank(),
-          axis.title.x = element_blank())
+          axis.title.x = element_blank()) +    
+                    ggplot2::theme(legend.position="bottom") 
 
 ### SUPPL dam release - Livelihoods e-flows
 
@@ -584,17 +591,18 @@ Fig_PLS_SUPPL_dam_release_crop_water_gap <- plot_pls(pls_result_3,
                             x_axis_name = "Variable Importance in the Projection (VIP)")+ 
   annotate(geom="text", x=1.7, y=3, 
            label=expression(atop("SUPPL", 
-                   paste("dam releases"))))  
-
-
-library(patchwork)
-      Fig_PLS_EFLOW_crop_water_gap +
-      Fig_PLS_SUPPL_dam_release_crop_water_gap +
-      plot_layout(ncol = 1, guides = "collect") +    
+                   paste("dam releases"))))  +    
                     ggplot2::theme(legend.position="bottom") 
 
 
-ggsave("figures/Fig_5_sensitivity.png", width=10, height=7)
+library(patchwork)
+
+      Fig_PLS_EFLOW_crop_water_gap +
+      Fig_PLS_SUPPL_dam_release_crop_water_gap +
+      plot_layout(ncol = 1, guides = "collect") &
+  theme(legend.position = "bottom")
+
+ggsave("figures/Fig_5_sensitivity.png", width=7, height=7)
 
 ```
 
